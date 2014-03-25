@@ -440,7 +440,7 @@
 	<BugPattern abbrev="MDM" type="MDM_STRING_BYTES_ENCODING" category="CORRECTNESS" />
 	<BugPattern abbrev="MDM" type="MDM_SETDEFAULTLOCALE" category="MT_CORRECTNESS" />
 	<BugPattern abbrev="MDM" type="MDM_BIGDECIMAL_EQUALS" category="CORRECTNESS" />
-	<BugPattern abbrev="MDM" type="MDM_RANDOM_SEED" category="CORRECTNESS" />
+	<BugPattern abbrev="MDM" type="MDM_RANDOM_SEED" category="SECURITY" />
 	<BugPattern abbrev="MDM" type="MDM_SECURERANDOM" category="CORRECTNESS" />
 	<BugPattern abbrev="ROOM" type="ROOM_REFLECTION_ON_OBJECT_METHODS" category="CORRECTNESS" />
 	<BugPattern abbrev="IPU" type="IPU_IMPROPER_PROPERTIES_USE" category="CORRECTNESS" />

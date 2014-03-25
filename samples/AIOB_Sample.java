@@ -1,5 +1,6 @@
 import java.util.List;
 
+@SuppressWarnings({"null", "unused"})
 public class AIOB_Sample {
     int[] fa = new int[4];
     int[] fb;
@@ -11,7 +12,7 @@ public class AIOB_Sample {
         fa[4] = 2;
     }
 
-    public void testUnallocated() {
+	public void testUnallocated() {
         int[] b = null;
 
         b[4] = 4;

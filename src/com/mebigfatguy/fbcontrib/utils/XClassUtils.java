@@ -83,8 +83,7 @@ public class XClassUtils {
 		
 		XMethod xMethod = xClass.findMethod(methodName, methodSig, false);
 		if (xMethod == null) {
-			final XClass superClass = getXClass(xClass
-					.getSuperclassDescriptor());
+			final XClass superClass = getXClass(xClass.getSuperclassDescriptor());
 			xMethod = getXMethod(superClass, methodName, methodSig);
 		}
 		return xMethod;

@@ -104,8 +104,7 @@ public class PMB_Sample {
     public void fpInnerDoesRemove() {
         inner_data.add("Hello");
         Runnable r = new Runnable() {
-            @Override
-			public void run() {
+            public void run() {
                 inner_data.remove("Hello");
             }
         };
