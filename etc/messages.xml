@@ -1596,10 +1596,26 @@
 		<LongDescription>Class {0} defines two or more one for one associated lists or arrays</LongDescription>
 		<Details>
 			<![CDATA[
-			<p>This class appears to maintain two or more lists or arrays who's contains is related one-for-one
-			through the index of the list or array. Consider creating a separate class to hold all the related
+			<p>This class appears to maintain two or more lists or arrays whose contents are related in a parallel way.  That is,
+			you have something like:<br/>
+			<code> 
+			List<String> words = new ArrayList<String>();<br/>
+			List<Integer> wordCounts = new ArrayList<String>();<br/>
+			</code>
+			where the elements of the list at index 0 are related, the elements at index 1 are related and so on. </p>
+			<p>
+			Consider creating a separate class to hold all the related
 			pieces of information, and adding instances of this class to just one list or array, or if just two values, use
-			a Map to associate one value with the other.</p>
+			a Map to associate one value with the other like:<br/>
+			<code> 
+			private class WordAndCount{public String word;  public int count}
+			List<WordAndCount> wordsAndCounts = new ArrayList<WordAndCount>();<br/>
+			<br/>
+			//or, for just two elements<br/>
+			Map<String,Integer> wordCounts = new HashMap<String,Integer>();<br/>
+			</code>
+			
+			</p>
 			]]>
 		</Details>
 	</BugPattern>
