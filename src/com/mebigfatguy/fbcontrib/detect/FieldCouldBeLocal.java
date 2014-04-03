@@ -111,6 +111,7 @@ public class FieldCouldBeLocal extends BytecodeScanningDetector
 			}
 
 			if (localizableFields.size() > 0) {
+				//TODO make the bug appear at the field, not at the method call
 			    buildMethodFieldModifiers(classContext);
 				super.visitClassContext(classContext);
 				for (FieldInfo fi : localizableFields.values()) {
