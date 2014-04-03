@@ -24,6 +24,8 @@ import org.apache.bcel.Constants;
 import org.apache.bcel.classfile.Code;
 import org.apache.bcel.classfile.Method;
 
+import com.mebigfatguy.fbcontrib.debug.Debug;
+
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
 import edu.umd.cs.findbugs.BytecodeScanningDetector;
@@ -40,12 +42,15 @@ public class LiteralStringComparison extends BytecodeScanningDetector
 	private BugReporter bugReporter;
 	private OpcodeStack stack;
 	
+	
+	
 	/**
      * constructs a LSC detector given the reporter to report bugs on
      * @param bugReporter the sync of bug reports
 	 */
 	public LiteralStringComparison(final BugReporter bugReporter) {
 		this.bugReporter = bugReporter;		
+		
 	}
 
 	/**
@@ -113,6 +118,10 @@ public class LiteralStringComparison extends BytecodeScanningDetector
 								.addClass(this)
 								.addMethod(this)
 								.addSourceLine(this));
+							
+					        Debug.println(String.format("After executing: %-16s at PC: %-5d Stack Size: %-3d", Constants.OPCODE_NAMES[getOpcode()], getPC(), stack.getStackDepth()));
+					        Debug.println("\t"+stack);
+							
 						}
 					}
 				}						
