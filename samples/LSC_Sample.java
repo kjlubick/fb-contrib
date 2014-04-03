@@ -38,4 +38,19 @@ public class LSC_Sample {
     public int test9(String s) {
         return CONSTANT_VAL_STRING2.compareTo(s);
     }
+    
+    public static int test10(String s) {
+    	switch (s) {
+		case "Hello":
+			return 1;
+		case CONSTANT_VAL_STRING:
+			return 2;
+		default:
+			return 3;
+		}
+    }
+    
+    public static void main(String[] args) {
+		System.out.println(test10(null));
+	}
 }
