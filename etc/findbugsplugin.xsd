@@ -35,7 +35,8 @@
 			<xsd:enumeration value="MT_CORRECTNESS"/>
 			<xsd:enumeration value="PERFORMANCE"/>
 			<xsd:enumeration value="BAD_PRACTICE"/>
-			<xsd:enumeration value="STYLE"/>			
+			<xsd:enumeration value="STYLE"/>		
+			<xsd:enumeration value="SECURITY"/>				
 		</xsd:restriction>
 	</xsd:simpleType>
 	
