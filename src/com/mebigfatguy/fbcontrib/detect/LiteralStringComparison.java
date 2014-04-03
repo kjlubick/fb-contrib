@@ -30,7 +30,10 @@ import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
 import edu.umd.cs.findbugs.BytecodeScanningDetector;
 import edu.umd.cs.findbugs.OpcodeStack;
+import edu.umd.cs.findbugs.SwitchHandler;
 import edu.umd.cs.findbugs.ba.ClassContext;
+import edu.umd.cs.findbugs.ba.XClass;
+import edu.umd.cs.findbugs.classfile.ClassDescriptor;
 
 /**
  * looks for methods that compare strings against literal strings, where the literal string
@@ -42,7 +45,8 @@ public class LiteralStringComparison extends BytecodeScanningDetector
 	private BugReporter bugReporter;
 	private OpcodeStack stack;
 	
-	
+	private SwitchHandler switchHandler;
+	private XClass enumType;
 	
 	/**
      * constructs a LSC detector given the reporter to report bugs on
@@ -62,9 +66,11 @@ public class LiteralStringComparison extends BytecodeScanningDetector
 	public void visitClassContext(final ClassContext classContext) {
 		try {
 			stack = new OpcodeStack();
+			
 			super.visitClassContext(classContext);
 		} finally {
 			stack = null;
+			switchHandler = null;
 		}
 	}
 	
@@ -87,8 +93,11 @@ public class LiteralStringComparison extends BytecodeScanningDetector
 	@Override
 	public void visitCode(final Code obj) {
 		if (prescreen(getMethod())) {
+			switchHandler = new SwitchHandler();
 			stack.resetForMethodEntry(this);
+			Debug.println(getMethod());
 			super.visitCode(obj);
+			switchHandler = null;
 		}
 	}
 	
@@ -103,31 +112,59 @@ public class LiteralStringComparison extends BytecodeScanningDetector
 	        stack.precomputation(this);
 			
 			if ((seen == INVOKEVIRTUAL) && "java/lang/String".equals(getClassConstantOperand())) {
-				String calledMethodName = getNameConstantOperand();
-				String calledMethodSig = getSigConstantOperand();
-				
-				if (("equals".equals(calledMethodName) && "(Ljava/lang/Object;)Z".equals(calledMethodSig))
-				||  ("compareTo".equals(calledMethodName) && "(Ljava/lang/String;)I".equals(calledMethodSig))
-                ||  ("equalsIgnoreCase".equals(calledMethodName) && "(Ljava/lang/String;)Z".equals(calledMethodSig))) {
-                    
-					if (stack.getStackDepth() > 0) {
-						OpcodeStack.Item itm = stack.getStackItem(0);
-						Object constant = itm.getConstant();
-						if ((constant != null) && constant.getClass().equals(String.class)) {
-							bugReporter.reportBug( new BugInstance( this, "LSC_LITERAL_STRING_COMPARISON", HIGH_PRIORITY)  //very confident
-								.addClass(this)
-								.addMethod(this)
-								.addSourceLine(this));
-							
-					        Debug.println(String.format("After executing: %-16s at PC: %-5d Stack Size: %-3d", Constants.OPCODE_NAMES[getOpcode()], getPC(), stack.getStackDepth()));
-					        Debug.println("\t"+stack);
-							
-						}
-					}
-				}						
+				handleMethodOnString();						
+			} 
+			else if (seen == INVOKEVIRTUAL && getNameConstantOperand().equals("ordinal") && getSigConstantOperand().equals("()I")) {
+	            sawEnum();	//might have a switch on the enum soon
+	        }
+			else if (seen == TABLESWITCH || seen == LOOKUPSWITCH) {
+				handleSwitch();
+			} else {
+				//clear enum seen (if any) , it wasn't for a table
+				enumType = null;
 			}
 		} finally {
 			stack.sawOpcode(this, seen);
+		}
+	}
+
+	private void sawEnum() {
+		XClass c = getXClassOperand();
+		if (c != null) {
+		    ClassDescriptor superclassDescriptor = c.getSuperclassDescriptor();
+		    if (superclassDescriptor != null && superclassDescriptor.getClassName().equals("java/lang/Enum"))
+		        enumType = c;
+		        Debug.println(getPC(),"Saw " + enumType + ".ordinal()");
+		}
+	}
+
+	private void handleSwitch() {
+		switchHandler.enterSwitch(this, enumType);
+		Debug.printf_pc("  entered switch, default is %d%n", getPC(), switchHandler.getDefaultOffset());
+	}
+
+	protected void handleMethodOnString() {
+		String calledMethodName = getNameConstantOperand();
+		String calledMethodSig = getSigConstantOperand();
+		
+		if (("equals".equals(calledMethodName) && "(Ljava/lang/Object;)Z".equals(calledMethodSig))
+		||  ("compareTo".equals(calledMethodName) && "(Ljava/lang/String;)I".equals(calledMethodSig))
+		||  ("equalsIgnoreCase".equals(calledMethodName) && "(Ljava/lang/String;)Z".equals(calledMethodSig))) {
+		    
+			if (stack.getStackDepth() > 0) {
+				OpcodeStack.Item itm = stack.getStackItem(0);
+				Object constant = itm.getConstant();
+				if ((constant != null) && constant.getClass().equals(String.class)) {
+					bugReporter.reportBug( new BugInstance( this, "LSC_LITERAL_STRING_COMPARISON", HIGH_PRIORITY)  //very confident
+						.addClass(this)
+						.addMethod(this)
+						.addSourceLine(this));
+					
+			        Debug.println(String.format("After executing: %-16s at PC: %-5d Stack Size: %-3d", Constants.OPCODE_NAMES[getOpcode()], getPC(), stack.getStackDepth()));
+			        Debug.println("\t"+stack);
+					
+				}
+			}
 		}
 	}
 
