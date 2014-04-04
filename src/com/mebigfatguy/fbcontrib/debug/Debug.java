@@ -20,6 +20,10 @@ public class Debug {
 	
 	private Debug(){}
 
+	public static void println() {
+		out.println();
+	}
+	
 	public static void println(Object x) {
 		out.println(x);
 	}
@@ -36,20 +40,6 @@ public class Debug {
 	 */
 	public static void println(int pc, Object obj) {
 		out.printf("[PC:%d] %s%n", pc,obj);
-	}
-
-	/**
-	 * Like printf, but appends the current pc (be sure to include this in the format objects)
-	 * 
-	 * e.g. Debug.printf_pc("%1.3f%n", getPC(), getFloat());
-	 * will print
-	 * [PC:42] 37.664\n    //assuming PC is currently 42
-	 * 
-	 * @param formatString
-	 * @param objects
-	 */
-	public static void printf_pc(String formatString, Object... objects) {
-		out.printf("[PC:%d] "+formatString, objects);
 	}
 	
 	
