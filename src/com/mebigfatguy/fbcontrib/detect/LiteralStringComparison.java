@@ -18,7 +18,6 @@
  */
 package com.mebigfatguy.fbcontrib.detect;
 
-import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Set;
@@ -26,8 +25,6 @@ import java.util.Set;
 import org.apache.bcel.Constants;
 import org.apache.bcel.classfile.Code;
 import org.apache.bcel.classfile.Method;
-
-import com.mebigfatguy.fbcontrib.debug.Debug;
 
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
@@ -54,7 +51,6 @@ public class LiteralStringComparison extends BytecodeScanningDetector
 	private BugReporter bugReporter;
 	private OpcodeStack stack;
 
-	//private SwitchHandler switchHandler;
 	private Set<Integer> stringBasedSwitchFalsePositives;
 
 	int lastDupSeen;
@@ -110,8 +106,7 @@ public class LiteralStringComparison extends BytecodeScanningDetector
 			lastDupSeen=-10;
 			lastStringHashCodeSeen=-10;
 			stringBasedSwitchFalsePositives.clear();
-			Debug.println();
-			Debug.println(getMethod());
+			//Debug.println(getMethod());
 			super.visitCode(obj);
 		}
 	}
@@ -142,12 +137,12 @@ public class LiteralStringComparison extends BytecodeScanningDetector
 
 
 	private void handleLookupSwitch() {
-		Debug.println(getPC(), String.format(
-				"Saw Lookup Switch with last dup seen at %d and last hashCode at %d",
-				lastDupSeen,lastStringHashCodeSeen));
-
-		Debug.println(getPC(),String.format("entered switch, offsets:%s labels:%s",  
-				Arrays.toString(getSwitchOffsets()), Arrays.toString(getSwitchLabels())));
+//		Debug.println(getPC(), String.format(
+//				"Saw Lookup Switch with last dup seen at %d and last hashCode at %d",
+//				lastDupSeen,lastStringHashCodeSeen));
+//
+//		Debug.println(getPC(),String.format("entered switch, offsets:%s labels:%s",  
+//				Arrays.toString(getSwitchOffsets()), Arrays.toString(getSwitchLabels())));
 
 		int pc = getPC();
 		//This setup, with a dup 5 bytes before and a hashcode call 3 bytes before is a near-sure-fire
@@ -177,7 +172,7 @@ public class LiteralStringComparison extends BytecodeScanningDetector
 				Object constant = itm.getConstant();
 				if ((constant != null) && constant.getClass().equals(String.class)) {
 					if (stringBasedSwitchFalsePositives.contains(getPC())) {
-						Debug.println(getPC(), "Ignoring false positive LSC");
+						//Debug.println(getPC(), "Ignoring false positive LSC");
 					}
 					else {
 						bugReporter.reportBug( new BugInstance( this, "LSC_LITERAL_STRING_COMPARISON", HIGH_PRIORITY)  //very confident
@@ -185,13 +180,14 @@ public class LiteralStringComparison extends BytecodeScanningDetector
 						.addMethod(this)
 						.addSourceLine(this));
 
-						Debug.println(String.format("After executing: %-16s at PC: %-5d Stack Size: %-3d", Constants.OPCODE_NAMES[getOpcode()], getPC(), stack.getStackDepth()));
+						//Debug.println(String.format("After executing: %-16s at PC: %-5d Stack Size: %-3d", Constants.OPCODE_NAMES[getOpcode()], getPC(), stack.getStackDepth()));
 					}
 
 				}
 			}
 		}
 		else if ("hashCode".equals(calledMethodName)) {
+			//record hashcodes for detecting lookupSwitch
 			lastStringHashCodeSeen = getPC();
 		}
 	}
