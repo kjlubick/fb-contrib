@@ -53,7 +53,6 @@ public class LSC_Sample {
         return CONSTANT_VAL_STRING2.compareTo(s);
     }
     
-    //Should not throw a LSC flag (perhaps one warning of a NPE in the switch
     public static int test10(String s) {
     	switch (s) {
 		case "Hello":
@@ -74,7 +73,6 @@ public class LSC_Sample {
     }
     
    
-    //Try to embed a "correct" bug inside false positives
     public static int test11(String s, String s2) {
     	//no tag
     	switch (s) {

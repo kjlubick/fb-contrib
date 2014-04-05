@@ -56,6 +56,7 @@ public class LiteralStringComparison extends BytecodeScanningDetector
 	int lastDupSeen;
 	int lastStringHashCodeSeen;
 
+
 	/**
 	 * constructs a LSC detector given the reporter to report bugs on
 	 * @param bugReporter the sync of bug reports
@@ -71,9 +72,10 @@ public class LiteralStringComparison extends BytecodeScanningDetector
 	 * @param classContext the context object for the currently parsed class
 	 */
 	@Override
-	public void visitClassContext(final ClassContext classContext) {
+	public void visitClassContext(ClassContext classContext) {
 		try {
 			stack = new OpcodeStack();
+
 			stringBasedSwitchFalsePositives = new HashSet<Integer>();
 			super.visitClassContext(classContext);
 		} finally {
@@ -89,7 +91,7 @@ public class LiteralStringComparison extends BytecodeScanningDetector
 	 * @param method the context object of the current method
 	 * @return if the class loads constants
 	 */
-	private boolean prescreen(final Method method) {
+	private boolean prescreen(Method method) {
 		BitSet bytecodeSet = getClassContext().getBytecodeSet(method);
 		return (bytecodeSet != null) && (bytecodeSet.get(Constants.LDC) || bytecodeSet.get(Constants.LDC_W));
 	}

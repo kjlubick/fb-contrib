@@ -73,11 +73,6 @@
             <pathelement location="${lib.dir}/slf4j-api-${slf4j-api.version}.jar" />
             <pathelement location="${lib.dir}/guava-${guava.version}.jar" />
 		</path>
-		<mkdir dir="${classes.dir}/com" />
-		<mkdir dir="${classes.dir}/com/mebigfatguy" />
-		<mkdir dir="${classes.dir}/com/mebigfatguy/fbcontrib" />
-		<mkdir dir="${classes.dir}/com/mebigfatguy/fbcontrib/detect" />
-		<echo message="*.class" file="${classes.dir}/com/mebigfatguy/fbcontrib/detect/.cvsignore" />
 	</target>
 
 	<target name="validate_xml" depends="-init" description="validates the xml files">
@@ -135,6 +130,7 @@
 				<attribute name="Require-Bundle" value="edu.umd.cs.findbugs.plugin.eclipse" />
 				<attribute name="Bundle-ActivationPolicy" value="lazy" />
 				<attribute name="Export-Package" value="com.mebigfatguy.fbcontrib.collect, com.mebigfatguy.fbcontrib.detect, com.mebigfatguy.fbcontrib.debug" />
+                <attribute name="Import-Package" value="edu.umd.cs.findbugs, edu.umd.cs.findbugs.ba, edu.umd.cs.findbugs.bceledu.umd.cs.findbugs.visitclass, org.apache.bcel, org.apache.bcel.classfile, org.apache.bcel.generic" />
 			</manifest>
 		</jar>
 	</target>
@@ -150,8 +146,9 @@
 				<include name="**/*.xml" />
 				<include name="**/*.xsd" />
 				<include name="**/*.license" />
-				<include name="**/*.txt" />
-				<include name="lib/*.jar" />
+                <include name="**/*.txt" />
+                <include name="**/*.md" />
+                <include name="**/*.xls" />
 			</fileset>
 		</zip>
 	</target>

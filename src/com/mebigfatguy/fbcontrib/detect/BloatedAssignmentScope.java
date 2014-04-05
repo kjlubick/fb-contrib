@@ -26,6 +26,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.bcel.classfile.Code;
 import org.apache.bcel.classfile.CodeException;
@@ -52,6 +54,7 @@ import edu.umd.cs.findbugs.ba.XField;
 public class BloatedAssignmentScope extends BytecodeScanningDetector {
     private static final Set<String> dangerousAssignmentClassSources = new HashSet<String>(7);
     private static final Set<String> dangerousAssignmentMethodSources = new HashSet<String>(4);
+    private static final Set<Pattern> dangerousAssignmentMethodPatterns = new HashSet<Pattern>(1);
 
     static {
         dangerousAssignmentClassSources.add("java/io/BufferedInputStream");
@@ -61,12 +64,17 @@ public class BloatedAssignmentScope extends BytecodeScanningDetector {
         dangerousAssignmentClassSources.add("java/io/BufferedReader");
         dangerousAssignmentClassSources.add("java/io/FileReader");
         dangerousAssignmentClassSources.add("java/io/Reader");
+        dangerousAssignmentClassSources.add("javax/nio/channels/Channel");
+        dangerousAssignmentClassSources.add("io/netty/channel/Channel");
+        
         dangerousAssignmentMethodSources.add("java/lang/System.currentTimeMillis()J");
         dangerousAssignmentMethodSources.add("java/lang/System.nanoTime()J");
         dangerousAssignmentMethodSources.add("java/util/Calendar.get(I)I");
         dangerousAssignmentMethodSources.add("java/util/GregorianCalendar.get(I)I");
         dangerousAssignmentMethodSources.add("java/util/Iterator.next()Ljava/lang/Object;");
         dangerousAssignmentMethodSources.add("java/util/regex/Matcher.start()I");
+        
+        dangerousAssignmentMethodPatterns.add(Pattern.compile(".*serial.*", Pattern.CASE_INSENSITIVE));
     }
 
     BugReporter bugReporter;
@@ -932,7 +940,19 @@ public class BloatedAssignmentScope extends BytecodeScanningDetector {
         }
 
         String key = clsName + "." + getNameConstantOperand() + getSigConstantOperand();
-        return dangerousAssignmentMethodSources.contains(key);
+        if (dangerousAssignmentMethodSources.contains(key)) {
+            return true;
+        }
+        
+        for (Pattern p : dangerousAssignmentMethodPatterns) {
+            Matcher m = p.matcher(key);
+            if (m.matches()) {
+                return true;
+            }
+        }
+        
+        
+        return false;
     }
 
     static class UserObject {
