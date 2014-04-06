@@ -73,9 +73,9 @@ public class MoreDumbMethods extends BytecodeScanningDetector
 		// Random Number Generator checks
 		//
 		dumbMethods.put("java/util/Random.<init>()V",				new ReportInfo("MDM_RANDOM_SEED", HIGH_PRIORITY));
-		dumbMethods.put("java/security/SecureRandom.<init>()V",		new ReportInfo("MDM_SECURERANDOM", LOW_PRIORITY));
-		dumbMethods.put("java/security/SecureRandom.<init>([B)V",	new ReportInfo("MDM_SECURERANDOM", LOW_PRIORITY));
-		dumbMethods.put("java/security/SecureRandom.getSeed(I)[B",	new ReportInfo("MDM_SECURERANDOM", LOW_PRIORITY));
+		dumbMethods.put("java/security/SecureRandom.<init>()V",		new ReportInfo("MDM_SECURERANDOM", HIGH_PRIORITY));
+		dumbMethods.put("java/security/SecureRandom.<init>([B)V",	new ReportInfo("MDM_SECURERANDOM", HIGH_PRIORITY));
+		dumbMethods.put("java/security/SecureRandom.getSeed(I)[B",	new ReportInfo("MDM_SECURERANDOM", HIGH_PRIORITY));
 
 		//
 		// Thread checks
