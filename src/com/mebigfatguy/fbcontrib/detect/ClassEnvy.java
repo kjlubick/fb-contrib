@@ -138,6 +138,7 @@ public class ClassEnvy extends BytecodeScanningDetector
 			Map.Entry<String, Set<Integer>>[]envies = clsAccessCount.entrySet().toArray(new Map.Entry[clsAccessCount.size()]);
 			Arrays.sort(envies, new Comparator<Map.Entry<String, Set<Integer>>>()
 					{
+				@Override
 				public int compare(final Map.Entry<String, Set<Integer>> entry1, final Map.Entry<String, Set<Integer>> entry2) {
 					return entry2.getValue().size() - entry1.getValue().size();
 				}

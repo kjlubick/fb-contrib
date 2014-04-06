@@ -61,6 +61,7 @@ public class NonFunctionalField extends PreorderVisitor implements Detector {
 	 * @param classContext the context object of the currently parsed class
 	 */
 
+	@Override
 	public void visitClassContext(ClassContext classContext) {
 		try {
 			JavaClass cls = classContext.getJavaClass();
@@ -80,6 +81,7 @@ public class NonFunctionalField extends PreorderVisitor implements Detector {
 		}
 	}
 
+	@Override
 	public void report() {
 	}
 }
