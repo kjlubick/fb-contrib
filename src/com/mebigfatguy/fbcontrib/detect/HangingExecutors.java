@@ -34,7 +34,6 @@ public class HangingExecutors extends BytecodeScanningDetector {
 	private static final Set<String> terminatingMethods = new HashSet<String>();
 	
 	static {
-		terminatingMethods.add("awaitTermination");
 		terminatingMethods.add("shutdown");
 		terminatingMethods.add("shutdownNow");
 	}
@@ -95,6 +94,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 		for (Entry<XField, FieldAnnotation> entry : bloatableCandidates.entrySet()) {
 			FieldAnnotation fieldAn = entry.getValue();
 			if (fieldAn != null) {
+				//TODO Consider two types of bugs, one for never shut down, one for 
 				bugReporter.reportBug(new BugInstance(this, "HE_NOT_SHUTDOWN_EXECUTOR", NORMAL_PRIORITY)
 				.addClass(this)
 				.addField(fieldAn)
