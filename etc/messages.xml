@@ -1414,6 +1414,14 @@
             ]]>
         </Details>
     </Detector>
+	
+	<Detector class="com.mebigfatguy.fbcontrib.detect.HangingExecutors">
+        <Details>
+            <![CDATA[
+            <p>Detector for hanging ExecutorServices</p>
+            ]]>
+        </Details>
+    </Detector>
 
 	<Detector class="com.mebigfatguy.fbcontrib.debug.OCSDebugger">
 		<Details></Details>
@@ -4001,6 +4009,17 @@
             ]]>
         </Details>
     </BugPattern>
+	
+	<BugPattern type="HE_NOT_SHUTDOWN_EXECUTOR">
+        <ShortDescription>This ExecutorService doesn't get shutdown</ShortDescription>
+        <LongDescription>ExecutorService {1} is instantiated, but never shutdown, potentially preventing the entire JVM from shutting down</LongDescription>
+        <Details>
+            <![CDATA[
+            <p>Work In progress</p>
+            ]]>
+        </Details>
+    </BugPattern>
+	
 
 	<!-- BugCode -->
 
@@ -4121,4 +4140,5 @@
 	<BugCode abbrev="UP">Unused Parameter</BugCode>
 	<BugCode abbrev="CD">Circular Dependencies</BugCode>
 	<BugCode abbrev="MUC">Modifying Unmodifiable Collection</BugCode>
+	<BugCode abbrev="HE">HE_NOT_SHUTDOWN_EXECUTOR</BugCode>
 </MessageCollection>
