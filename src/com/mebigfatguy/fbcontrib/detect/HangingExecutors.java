@@ -27,7 +27,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 	private static final Set<String> hangableSig = new HashSet<String>();
 	
 	static {
-		hangableSig.add("Ljava/util/concurrent/ExecutorService");
+		hangableSig.add("Ljava/util/concurrent/ExecutorService;");
 	}
 	
 	
@@ -42,7 +42,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 	
 	private final BugReporter bugReporter;
 	private Map<XField, FieldAnnotation> bloatableCandidates;
-	private Map<XField, FieldAnnotation> bloatableFields;
+	//private Map<XField, FieldAnnotation> bloatableFields;
 	private OpcodeStack stack;
 	private String methodName;
 	
@@ -63,7 +63,6 @@ public class HangingExecutors extends BytecodeScanningDetector {
 	public void visitClassContext(ClassContext classContext) {
 		try {
 			bloatableCandidates = new HashMap<XField, FieldAnnotation>();
-			bloatableFields = new HashMap<XField, FieldAnnotation>();
 			parseFields(classContext);
 
 			if (bloatableCandidates.size() > 0) {
@@ -76,8 +75,6 @@ public class HangingExecutors extends BytecodeScanningDetector {
 			stack = null;
 			bloatableCandidates.clear();
 			bloatableCandidates = null;
-			bloatableFields.clear();
-			bloatableFields = null;
 		}
 	}
 	
@@ -95,10 +92,9 @@ public class HangingExecutors extends BytecodeScanningDetector {
 	}
 	
 	private void reportHangingExecutorBugs() {
-		for (Entry<XField, FieldAnnotation> entry : bloatableFields.entrySet()) {
+		for (Entry<XField, FieldAnnotation> entry : bloatableCandidates.entrySet()) {
 			FieldAnnotation fieldAn = entry.getValue();
 			if (fieldAn != null) {
-				//TODO
 				bugReporter.reportBug(new BugInstance(this, "HE_NOT_SHUTDOWN_EXECUTOR", NORMAL_PRIORITY)
 				.addClass(this)
 				.addField(fieldAn)
@@ -145,7 +141,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 					XField field = itm.getXField();
 					if (field != null) {
 						if (bloatableCandidates.containsKey(field)) {
-							checkMethodAsDecreasingOrIncreasing(field);
+							checkMethodAsShutdownOrRelated(field);
 						}
 					}
 				}
@@ -166,16 +162,15 @@ public class HangingExecutors extends BytecodeScanningDetector {
 			XField field = returnItem.getXField();
 			if (field != null) {
 				bloatableCandidates.remove(field);
-				bloatableFields.remove(field);
 			}
 		}
 	}
 
-	protected void checkMethodAsDecreasingOrIncreasing(XField field) {
+	protected void checkMethodAsShutdownOrRelated(XField field) {
 		String mName = getNameConstantOperand();
+		Debug.println("\t"+mName);
 		if (terminatingMethods.contains(mName)) {
 			bloatableCandidates.remove(field);
-			bloatableFields.remove(field);
 		}
 	}
 	
