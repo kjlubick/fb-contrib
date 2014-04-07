@@ -41,7 +41,6 @@ public class HangingExecutors extends BytecodeScanningDetector {
 	
 	private final BugReporter bugReporter;
 	private Map<XField, FieldAnnotation> bloatableCandidates;
-	//private Map<XField, FieldAnnotation> bloatableFields;
 	private OpcodeStack stack;
 	private String methodName;
 	
