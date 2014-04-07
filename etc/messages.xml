@@ -4012,10 +4012,20 @@
 	
 	<BugPattern type="HE_NOT_SHUTDOWN_EXECUTOR">
         <ShortDescription>This ExecutorService doesn't get shutdown</ShortDescription>
-        <LongDescription>ExecutorService {1} is instantiated, but never shutdown, potentially preventing the entire JVM from shutting down</LongDescription>
+        <LongDescription>ExecutorService {2} is instantiated, but never shutdown, potentially preventing the entire JVM from shutting down</LongDescription>
         <Details>
             <![CDATA[
             <p>Work In progress</p>
+			
+			<code>
+			this.executor = Executors.newCachedThreadPool(new ThreadFactory() {<br/>
+			&nbsp;&nbsp;&nbsp;public Thread newThread(Runnable arg0) {<br/>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Thread t = new Thread(arg0);<br/>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;t.setDaemon(true);<br/>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return t;<br/>
+			&nbsp;&nbsp;&nbsp;}<br/>
+			});<br/>
+			</code>
             ]]>
         </Details>
     </BugPattern>

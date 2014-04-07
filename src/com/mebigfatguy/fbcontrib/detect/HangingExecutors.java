@@ -54,8 +54,8 @@ public class HangingExecutors extends BytecodeScanningDetector {
 	
 	
 	/**
-	 * collects static fields that are likely bloatable objects and if found
-	 * allows the visitor to proceed, at the end report all leftover fields
+	 * finds ExecutorService objects that don't get a call to the terminating methods,
+	 * and thus, never appear to be shutdown properly (the threads exist until shutdown is called)
 	 * 
 	 * @param classContext the class context object of the currently parsed java class
 	 */
