@@ -8,8 +8,8 @@ public class HE_Sample {
 	
 
 	public static void main(String[] args) {
-		CachedThreadPoolProblem p = new CachedThreadPoolProblem();
-		p.test();
+		ReplacementExecutorProblem p = new ReplacementExecutorProblem();
+		p.reset();
 		
 		System.out.println("Should end");
 	}
@@ -103,11 +103,11 @@ class FixedThreadPoolProblem {
 	
 }
 
-class CachedThreadPoolProblem {
+class CachedThreadPoolMehProblem {
 	//tag, sort of a false positive because JVM will exit after 60 seconds
 	private ExecutorService executor;
 
-	public CachedThreadPoolProblem() {
+	public CachedThreadPoolMehProblem() {
 		this.executor = Executors.newCachedThreadPool();
 	}
 	
@@ -118,13 +118,12 @@ class CachedThreadPoolProblem {
 	
 }
 
-class SingleThreadExecutorThreadFactoryGood {
+class SingleThreadExecutorThreadFactoryMehProblem {
 	//tag, but kind of a false positive - Daemon threads will not prevent hang
 	private ExecutorService executor;
 
-	public SingleThreadExecutorThreadFactoryGood() {
+	public SingleThreadExecutorThreadFactoryMehProblem() {
 		this.executor = Executors.newSingleThreadExecutor(new ThreadFactory() {
-			
 			@Override
 			public Thread newThread(Runnable arg0) {
 				Thread t = new Thread(arg0);
@@ -140,4 +139,125 @@ class SingleThreadExecutorThreadFactoryGood {
 	}
 	
 }
+
+class ScheduledThreadPoolProblem {
+	//tag
+	private ExecutorService executor;
+
+	public ScheduledThreadPoolProblem() {
+		this.executor = Executors.newScheduledThreadPool(1);
+	}
+	
+	public void test() {
+		executor.execute(new SampleExecutable());
+		executor.execute(new SampleExecutable());
+	}
+	
+}
+
+class ReplacementExecutorProblem {
+	private ExecutorService executor;
+
+	public ReplacementExecutorProblem() {
+		this.executor = Executors.newScheduledThreadPool(1);
+		executor.execute(new SampleExecutable());
+	}
+	
+	public void reset() {
+		//tag (the old executor won't get picked up for garbage collection)
+		this.executor = Executors.newScheduledThreadPool(1);
+		executor.execute(new SampleExecutable());
+		try {
+			executor.awaitTermination(1, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+	
+}
+
+class ReplacementExecutorGood {
+	private ExecutorService executor;
+
+	public ReplacementExecutorGood() {
+		this.executor = Executors.newScheduledThreadPool(1);
+		executor.execute(new SampleExecutable());
+	}
+	
+	public void reset() {
+		//no tag
+		this.executor.shutdown();
+		
+		this.executor = Executors.newScheduledThreadPool(1);
+		executor.execute(new SampleExecutable());
+		try {
+			executor.awaitTermination(1, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		executor.shutdown();
+	}
+	
+}
+
+class ReplacementExecutorBad2 {
+	private ExecutorService executor;
+
+	public ReplacementExecutorBad2() {
+		this.executor = Executors.newScheduledThreadPool(1);
+		executor.execute(new SampleExecutable());
+	}
+	
+	public void reset() {
+		//tag, because shutdown in other method isn't forced to be called
+		this.executor = Executors.newScheduledThreadPool(1);
+
+	}
+	
+	public void shutDown() {
+		this.executor.shutdown();
+	}
+	
+	public void task() {
+		executor.execute(new SampleExecutable());
+		try {
+			executor.awaitTermination(1, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+	
+}
+
+class ReplacementExecutorGood2 {
+	private ExecutorService executor;
+
+	public ReplacementExecutorGood2() {
+		this.executor = Executors.newScheduledThreadPool(1);
+		executor.execute(new SampleExecutable());
+	}
+	
+	public void reset() {
+		if (executor == null) {
+			//no tag, this indicates some thought that another threadpool won't get left behind
+			this.executor = Executors.newScheduledThreadPool(1);
+		}
+	}
+	
+	public void shutDown() {
+		this.executor.shutdown();
+		this.executor = null;
+	}
+	
+	public void task() {
+		executor.execute(new SampleExecutable());
+		try {
+			executor.awaitTermination(1, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+	
+}
+
 
