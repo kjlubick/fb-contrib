@@ -103,7 +103,8 @@ public class ModifyingUnmodifiableCollection extends BytecodeScanningDetector {
      * 
      * @param seen the currently parsed opcode
      */
-    public void sawOpcode(int seen) {
+    @Override
+	public void sawOpcode(int seen) {
         
         if (reportedType == ImmutabilityType.IMMUTABLE) {
             return;
