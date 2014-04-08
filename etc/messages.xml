@@ -4061,7 +4061,7 @@
             <b>&nbsp;&nbsp;&nbsp;this.executor.shutDown();</b> <br/>
             &nbsp;&nbsp;&nbsp;this.executor = Executors.newCachedThreadPool(); <br/>
             &nbsp;&nbsp;&nbsp;this.executor.execute(new SampleExecutable()); <br/>
-            }<br/>
+            }
             </code>
             </p>
             			
