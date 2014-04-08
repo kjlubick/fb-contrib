@@ -389,7 +389,7 @@ public class SillynessPotPourri extends BytecodeScanningDetector
 					OpcodeStack.Item item = stack.getStackItem(0);
 					String mName = (String) item.getUserValue();
 					if (mName != null) {
-    					if (mName.equals("trim")) {
+    					if ("trim".equals(mName)) {
     						item.setUserValue(null);
     					} else {
     					    Matcher m = APPEND_PATTERN.matcher(mName);
@@ -572,7 +572,7 @@ public class SillynessPotPourri extends BytecodeScanningDetector
 							}
 							item = stack.getStackItem(0);
 							String parm = (String)item.getConstant();
-							if ((parm != null) && (parm.length() == 0)) {
+							if ("".equals(parm)) {
 								bugReporter.reportBug(new BugInstance(this, "SPP_EMPTY_CASING", NORMAL_PRIORITY)
 								.addClass(this)
 								.addMethod(this)

@@ -2607,8 +2607,8 @@
 	</BugPattern>
 
 	<BugPattern type="SPP_SUSPECT_STRING_TEST">
-		<ShortDescription>Method treats null and normal strings differently than an empty strings</ShortDescription>
-		<LongDescription>Method {1} treats null and normal strings differently than an empty strings</LongDescription>
+		<ShortDescription>Method treats null and normal strings differently than empty strings</ShortDescription>
+		<LongDescription>Method {1} treats null and normal strings differently than empty strings</LongDescription>
 		<Details>
 			<![CDATA[
 			<p>This method tests a string, and groups null values with real strings, leaving empty strings as another

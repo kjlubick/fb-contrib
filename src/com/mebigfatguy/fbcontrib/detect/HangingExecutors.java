@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 import org.apache.bcel.classfile.Code;
 import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.JavaClass;
+import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.Type;
 
 import com.mebigfatguy.fbcontrib.debug.Debug;
@@ -116,6 +117,16 @@ public class HangingExecutors extends BytecodeScanningDetector {
 
 		if (hangingCandidates.size() > 0)
 			super.visitCode(obj);
+	}
+	
+	/**
+	 * implements the visitor to collect the method name
+	 * 
+	 * @param obj the context object of the currently parsed method
+	 */
+	@Override
+	public void visitMethod(Method obj) {
+		methodName = obj.getName();
 	}
 
 	/**
