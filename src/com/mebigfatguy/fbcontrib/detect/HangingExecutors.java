@@ -40,7 +40,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 	
 	
 	private final BugReporter bugReporter;
-	private Map<XField, FieldAnnotation> bloatableCandidates;
+	private Map<XField, FieldAnnotation> hangingCandidates;
 	private OpcodeStack stack;
 	private String methodName;
 	
@@ -60,10 +60,10 @@ public class HangingExecutors extends BytecodeScanningDetector {
 	@Override
 	public void visitClassContext(ClassContext classContext) {
 		try {
-			bloatableCandidates = new HashMap<XField, FieldAnnotation>();
+			hangingCandidates = new HashMap<XField, FieldAnnotation>();
 			parseFields(classContext);
 
-			if (bloatableCandidates.size() > 0) {
+			if (hangingCandidates.size() > 0) {
 				stack = new OpcodeStack();
 				super.visitClassContext(classContext);
 
@@ -71,8 +71,8 @@ public class HangingExecutors extends BytecodeScanningDetector {
 			}
 		} finally {
 			stack = null;
-			bloatableCandidates.clear();
-			bloatableCandidates = null;
+			hangingCandidates.clear();
+			hangingCandidates = null;
 		}
 	}
 	
@@ -84,17 +84,17 @@ public class HangingExecutors extends BytecodeScanningDetector {
 			Debug.println(sig);
 			if (hangableSig.contains(sig)) {
 				Debug.println("yes");
-				bloatableCandidates.put(XFactory.createXField(cls.getClassName(), f.getName(), f.getSignature(), f.isStatic()), FieldAnnotation.fromBCELField(cls, f));
+				hangingCandidates.put(XFactory.createXField(cls.getClassName(), f.getName(), f.getSignature(), f.isStatic()), FieldAnnotation.fromBCELField(cls, f));
 			}
 		}
 	}
 	
 	private void reportHangingExecutorBugs() {
-		for (Entry<XField, FieldAnnotation> entry : bloatableCandidates.entrySet()) {
+		for (Entry<XField, FieldAnnotation> entry : hangingCandidates.entrySet()) {
 			FieldAnnotation fieldAn = entry.getValue();
 			if (fieldAn != null) {
 				//TODO Consider two types of bugs, one for never shut down, one for 
-				bugReporter.reportBug(new BugInstance(this, "HE_NOT_SHUTDOWN_EXECUTOR", NORMAL_PRIORITY)
+				bugReporter.reportBug(new BugInstance(this, "HE_EXECUTOR_NEVER_SHUTDOWN", NORMAL_PRIORITY)
 				.addClass(this)
 				.addField(fieldAn)
 				.addField(entry.getKey()));
@@ -114,7 +114,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 		if ("<clinit>".equals(methodName) || "<init>".equals(methodName))
 			return;
 
-		if (bloatableCandidates.size() > 0)
+		if (hangingCandidates.size() > 0)
 			super.visitCode(obj);
 	}
 
@@ -127,7 +127,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 	@Override
 	public void sawOpcode(int seen) {
 		try {
-			if (bloatableCandidates.isEmpty())
+			if (hangingCandidates.isEmpty())
 				return;
 
 			stack.precomputation(this);
@@ -139,7 +139,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 					OpcodeStack.Item itm = stack.getStackItem(argCount);
 					XField field = itm.getXField();
 					if (field != null) {
-						if (bloatableCandidates.containsKey(field)) {
+						if (hangingCandidates.containsKey(field)) {
 							checkMethodAsShutdownOrRelated(field);
 						}
 					}
@@ -160,7 +160,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 			OpcodeStack.Item returnItem = stack.getStackItem(0);
 			XField field = returnItem.getXField();
 			if (field != null) {
-				bloatableCandidates.remove(field);
+				hangingCandidates.remove(field);
 			}
 		}
 	}
@@ -169,7 +169,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 		String mName = getNameConstantOperand();
 		Debug.println("\t"+mName);
 		if (terminatingMethods.contains(mName)) {
-			bloatableCandidates.remove(field);
+			hangingCandidates.remove(field);
 		}
 	}
 	
