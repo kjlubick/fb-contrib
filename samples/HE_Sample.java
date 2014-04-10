@@ -6,12 +6,12 @@ import java.util.concurrent.TimeUnit;
 
 
 public class HE_Sample {
-	
+
 
 	public static void main(String[] args) {
 		LocalExecutorOkay p = new LocalExecutorOkay();
 		p.task();
-		
+
 		System.out.println("Should end");
 	}
 }
@@ -36,12 +36,12 @@ class SingleThreadExecutorProblem {
 	public SingleThreadExecutorProblem() {
 		this.executor = Executors.newSingleThreadExecutor();
 	}
-	
+
 	public void test() {
 		executor.execute(new SampleExecutable());
 		executor.execute(new SampleExecutable());
 	}
-	
+
 }
 
 class SingleThreadExecutorGood {
@@ -110,11 +110,11 @@ class SingleThreadExecutorTryProblem {
 		try {
 			executor.awaitTermination(30, TimeUnit.SECONDS);
 			executor.shutdown();		//this doesn't count as shutdown, so it should be tagged.
-										//probably with a different bug
+			//probably with a different bug
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		
+
 	}
 }
 
@@ -125,12 +125,12 @@ class FixedThreadPoolProblem {
 	public FixedThreadPoolProblem() {
 		this.executor = Executors.newFixedThreadPool(3);
 	}
-	
+
 	public void test() {
 		executor.execute(new SampleExecutable());
 		executor.execute(new SampleExecutable());
 	}
-	
+
 }
 
 class CachedThreadPoolMehProblem {
@@ -140,12 +140,12 @@ class CachedThreadPoolMehProblem {
 	public CachedThreadPoolMehProblem() {
 		this.executor = Executors.newCachedThreadPool();
 	}
-	
+
 	public void test() {
 		executor.execute(new SampleExecutable());
 		executor.execute(new SampleExecutable());
 	}
-	
+
 }
 
 class SingleThreadExecutorThreadFactoryMehProblem {
@@ -162,12 +162,12 @@ class SingleThreadExecutorThreadFactoryMehProblem {
 			}
 		});
 	}
-	
+
 	public void test() {
 		executor.execute(new SampleExecutable());
 		executor.execute(new SampleExecutable());
 	}
-	
+
 }
 
 class ScheduledThreadPoolProblem {
@@ -177,12 +177,12 @@ class ScheduledThreadPoolProblem {
 	public ScheduledThreadPoolProblem() {
 		this.executor = Executors.newScheduledThreadPool(1);
 	}
-	
+
 	public void test() {
 		executor.execute(new SampleExecutable());
 		executor.execute(new SampleExecutable());
 	}
-	
+
 }
 
 class ReplacementExecutorProblem {
@@ -192,7 +192,7 @@ class ReplacementExecutorProblem {
 		this.executor = Executors.newScheduledThreadPool(1);
 		executor.execute(new SampleExecutable());
 	}
-	
+
 	public void reset() {
 		//tag (the old executor won't get picked up for garbage collection)
 		this.executor = Executors.newScheduledThreadPool(1);
@@ -203,16 +203,16 @@ class ReplacementExecutorProblem {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void test() {
 		executor.execute(new SampleExecutable());
 		executor.execute(new SampleExecutable());
 	}
-	
+
 	public void shutDown() {
 		executor.shutdownNow();
 	}
-	
+
 }
 
 class ReplacementExecutorGood {
@@ -222,11 +222,11 @@ class ReplacementExecutorGood {
 		this.executor = Executors.newScheduledThreadPool(1);
 		executor.execute(new SampleExecutable());
 	}
-	
+
 	public void reset() {
 		//no tag
 		this.executor.shutdown();
-		
+
 		this.executor = Executors.newScheduledThreadPool(1);
 		executor.execute(new SampleExecutable());
 		try {
@@ -236,7 +236,7 @@ class ReplacementExecutorGood {
 		}
 		executor.shutdown();
 	}
-	
+
 }
 
 class ReplacementExecutorBad2 {
@@ -246,17 +246,17 @@ class ReplacementExecutorBad2 {
 		this.executor = Executors.newScheduledThreadPool(1);
 		executor.execute(new SampleExecutable());
 	}
-	
+
 	public void reset() {
 		//tag, because shutdown in other method isn't forced to be called
 		this.executor = Executors.newScheduledThreadPool(1);
 
 	}
-	
+
 	public void shutDown() {
 		this.executor.shutdown();
 	}
-	
+
 	public void task() {
 		executor.execute(new SampleExecutable());
 		try {
@@ -265,7 +265,7 @@ class ReplacementExecutorBad2 {
 			e.printStackTrace();
 		}
 	}
-	
+
 }
 
 class ReplacementExecutorGood2 {
@@ -275,19 +275,19 @@ class ReplacementExecutorGood2 {
 		this.executor = Executors.newScheduledThreadPool(1);
 		executor.execute(new SampleExecutable());
 	}
-	
+
 	public void reset() {
 		if (executor == null) {
 			//no tag, this indicates some thought that another threadpool won't get left behind
 			this.executor = Executors.newScheduledThreadPool(1);
 		}
 	}
-	
+
 	public void shutDown() {
 		this.executor.shutdown();
 		this.executor = null;
 	}
-	
+
 	public void task() {
 		executor.execute(new SampleExecutable());
 		try {
@@ -296,23 +296,23 @@ class ReplacementExecutorGood2 {
 			e.printStackTrace();
 		}
 	}
-	
+
 }
 
 
 class LocalExecutorProblem {
-	
+
 	public void task() {
 		//tag - the GC doesn't kill the internal threadpool
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 		executor.execute(new SampleExecutable());
 		executor.execute(new SampleExecutable());
 	}
-	
+
 }
 
 class LocalExecutorOkay {
-	
+
 	public void task() {
 		//no tag, the local pool will be shutdown
 		ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -320,11 +320,11 @@ class LocalExecutorOkay {
 		executor.execute(new SampleExecutable());
 		executor.shutdown();
 	}
-	
+
 }
 
 class LocalExecutorOkay2 {
-	
+
 	public ExecutorService makeExecutor() {
 		//no tag, it is the responsibility of the super to shut this down
 		ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -333,20 +333,96 @@ class LocalExecutorOkay2 {
 
 		return executor;
 	}
-	
+
 }
 
 class LocalExecutorProblem2 {
-	
+
 	public void task() {
 		LocalExecutorOkay2 leo2 = new LocalExecutorOkay2();
-		
+
 		//tag, won't get shutdown
 		ExecutorService executor = leo2.makeExecutor();
 		executor.execute(new SampleExecutable());
 
 	}
-	
+
 }
+
+class LocalExecutorTryProblem {
+
+	public void task() {	
+		try {
+			//tag, shutdown might not get called
+			ExecutorService executor = Executors.newSingleThreadExecutor();
+			executor.execute(new SampleExecutable());
+			executor.execute(new SampleExecutable());
+			Thread.sleep(1000);
+			executor.shutdown();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+}
+
+class LocalExecutorTryProblem2 {
+
+	public void task() {	
+		//tag, shutdown might not get called
+		ExecutorService executor = Executors.newSingleThreadExecutor();
+		try {
+			executor.execute(new SampleExecutable());
+			executor.execute(new SampleExecutable());
+			Thread.sleep(1000);
+			executor.shutdown();
+			return;
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		System.out.println("We crashed, try one more execute");
+		executor.execute(new SampleExecutable());
+
+	}
+
+}
+
+class LocalExecutorTryOkay {
+
+	public void task() {
+		//no tag, the local pool will be shutdown
+
+		ExecutorService executor = Executors.newSingleThreadExecutor();
+		try {
+			executor.execute(new SampleExecutable());
+			executor.execute(new SampleExecutable());
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} finally {
+			executor.shutdown();
+		}
+
+	}
+}
+
+class LocalExecutorTryOkay2 {
+
+	public void task() {
+		//no tag, the local pool will be shutdown
+
+		ExecutorService executor = Executors.newSingleThreadExecutor();
+		try {
+			executor.execute(new SampleExecutable());
+			executor.execute(new SampleExecutable());
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		executor.shutdown();		
+	}
+}
+
 
 
