@@ -1,6 +1,5 @@
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
@@ -19,12 +18,13 @@ public class HE_Sample {
 class SampleExecutable implements Runnable {
 	@Override
 	public void run() {
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
 		System.out.println("Hello");
+	}
+
+	//Dummy method with throws to simulate something potentially throwing exception
+	public static void methodThrows() throws Exception{
+		if (Math.random()<.5)
+			throw new Exception("There was a problem with the RNG");
 	}
 
 }
@@ -357,9 +357,9 @@ class LocalExecutorTryProblem {
 			ExecutorService executor = Executors.newSingleThreadExecutor();
 			executor.execute(new SampleExecutable());
 			executor.execute(new SampleExecutable());
-			Thread.sleep(1000);
+			SampleExecutable.methodThrows();
 			executor.shutdown();
-		} catch (InterruptedException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
@@ -375,10 +375,10 @@ class LocalExecutorTryProblem2 {
 		try {
 			executor.execute(new SampleExecutable());
 			executor.execute(new SampleExecutable());
-			Thread.sleep(1000);
+			SampleExecutable.methodThrows();
 			executor.shutdown();
 			return;
-		} catch (InterruptedException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		System.out.println("We crashed, try one more execute");
@@ -397,8 +397,8 @@ class LocalExecutorTryOkay {
 		try {
 			executor.execute(new SampleExecutable());
 			executor.execute(new SampleExecutable());
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
+			SampleExecutable.methodThrows();
+		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
 			executor.shutdown();
@@ -416,8 +416,8 @@ class LocalExecutorTryOkay2 {
 		try {
 			executor.execute(new SampleExecutable());
 			executor.execute(new SampleExecutable());
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
+			SampleExecutable.methodThrows();
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		executor.shutdown();		
