@@ -31,6 +31,16 @@ public class HangingExecutors extends BytecodeScanningDetector {
 		hangableSig.add("Ljava/util/concurrent/ExecutorService;");
 	}
 	
+	 private static Set<String> executorsProblematicMethods = new HashSet<String>();
+	    static {
+	        executorsProblematicMethods.add("synchronizedCollection");
+	        executorsProblematicMethods.add("synchronizedList");
+	        executorsProblematicMethods.add("synchronizedMap");
+	        executorsProblematicMethods.add("synchronizedSet");
+	        executorsProblematicMethods.add("synchronizedSortedMap");
+	        executorsProblematicMethods.add("synchronizedSortedSet");
+	    }
+	
 	
 	private static final Set<String> terminatingMethods = new HashSet<String>();
 	
@@ -41,7 +51,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 	
 	
 	private final BugReporter bugReporter;
-	private Map<XField, FieldAnnotation> hangingCandidates;
+	private Map<XField, FieldAnnotation> hangingFieldCandidates;
 	private OpcodeStack stack;
 	private String methodName;
 	
@@ -61,20 +71,20 @@ public class HangingExecutors extends BytecodeScanningDetector {
 	@Override
 	public void visitClassContext(ClassContext classContext) {
 		try {
-			hangingCandidates = new HashMap<XField, FieldAnnotation>();
+			hangingFieldCandidates = new HashMap<XField, FieldAnnotation>();
 			//fill up hangingCandidates
 			parseFields(classContext);
 
-			if (hangingCandidates.size() > 0) {
+			if (hangingFieldCandidates.size() > 0) {
 				stack = new OpcodeStack();
 				super.visitClassContext(classContext);
 
-				reportHangingExecutorBugs();
+				reportHangingExecutorFieldBugs();
 			}
 		} finally {
 			stack = null;
-			hangingCandidates.clear();
-			hangingCandidates = null;
+			hangingFieldCandidates.clear();
+			hangingFieldCandidates = null;
 		}
 	}
 	
@@ -86,13 +96,13 @@ public class HangingExecutors extends BytecodeScanningDetector {
 			Debug.println(sig);
 			if (hangableSig.contains(sig)) {
 				Debug.println("yes");
-				hangingCandidates.put(XFactory.createXField(cls.getClassName(), f.getName(), f.getSignature(), f.isStatic()), FieldAnnotation.fromBCELField(cls, f));
+				hangingFieldCandidates.put(XFactory.createXField(cls.getClassName(), f.getName(), f.getSignature(), f.isStatic()), FieldAnnotation.fromBCELField(cls, f));
 			}
 		}
 	}
 	
-	private void reportHangingExecutorBugs() {
-		for (Entry<XField, FieldAnnotation> entry : hangingCandidates.entrySet()) {
+	private void reportHangingExecutorFieldBugs() {
+		for (Entry<XField, FieldAnnotation> entry : hangingFieldCandidates.entrySet()) {
 			FieldAnnotation fieldAn = entry.getValue();
 			if (fieldAn != null) {
 				//TODO Consider two types of bugs, one for never shut down, one for 
@@ -116,7 +126,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 		if ("<clinit>".equals(methodName) || "<init>".equals(methodName))
 			return;
 
-		if (hangingCandidates.size() > 0)
+		if (hangingFieldCandidates.size() > 0)
 			super.visitCode(obj);
 	}
 	
@@ -139,7 +149,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 	@Override
 	public void sawOpcode(int seen) {
 		try {
-			if (hangingCandidates.isEmpty())
+			if (hangingFieldCandidates.isEmpty())
 				return;
 
 			stack.precomputation(this);
@@ -151,7 +161,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 					OpcodeStack.Item itm = stack.getStackItem(argCount);
 					XField field = itm.getXField();
 					if (field != null) {
-						if (hangingCandidates.containsKey(field)) {
+						if (hangingFieldCandidates.containsKey(field)) {
 							checkMethodAsShutdownOrRelated(field);
 						}
 					}
@@ -172,7 +182,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 			OpcodeStack.Item returnItem = stack.getStackItem(0);
 			XField field = returnItem.getXField();
 			if (field != null) {
-				hangingCandidates.remove(field);
+				hangingFieldCandidates.remove(field);
 			}
 		}
 	}
@@ -181,7 +191,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 		String mName = getNameConstantOperand();
 		Debug.println("\t"+mName);
 		if (terminatingMethods.contains(mName)) {
-			hangingCandidates.remove(field);
+			hangingFieldCandidates.remove(field);
 		}
 	}
 	

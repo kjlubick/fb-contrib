@@ -118,7 +118,7 @@ public class PossibleMemoryBloat extends BytecodeScanningDetector
 	private Map<XField, FieldAnnotation> bloatableFields;
 	private OpcodeStack stack;
 	private String methodName;
-	private Set<FieldAnnotation> threadLocalFields;
+	private Set<FieldAnnotation> threadLocalNonStaticFields;
 
 	/**
 	 * constructs a PMB detector given the reporter to report bugs on
@@ -139,7 +139,7 @@ public class PossibleMemoryBloat extends BytecodeScanningDetector
 		try {
 			bloatableCandidates = new HashMap<XField, FieldAnnotation>();
 			bloatableFields = new HashMap<XField, FieldAnnotation>();
-			threadLocalFields = new HashSet<FieldAnnotation>();
+			threadLocalNonStaticFields = new HashSet<FieldAnnotation>();
 			parseFields(classContext);
 
 			if (bloatableCandidates.size() > 0) {
@@ -155,13 +155,13 @@ public class PossibleMemoryBloat extends BytecodeScanningDetector
 			bloatableCandidates = null;
 			bloatableFields.clear();
 			bloatableFields = null;
-			threadLocalFields.clear();
-			threadLocalFields = null;
+			threadLocalNonStaticFields.clear();
+			threadLocalNonStaticFields = null;
 		}
 	}
 
 	private void reportThreadLocalBugs() {
-		for(FieldAnnotation fieldAn: threadLocalFields) {
+		for(FieldAnnotation fieldAn: threadLocalNonStaticFields) {
 			bugReporter.reportBug(new BugInstance(this, "PMB_INSTANCE_BASED_THREAD_LOCAL", NORMAL_PRIORITY)
 			.addClass(this)
 			.addField(fieldAn));
@@ -191,7 +191,7 @@ public class PossibleMemoryBloat extends BytecodeScanningDetector
 					bloatableCandidates.put(XFactory.createXField(cls.getClassName(), f.getName(), f.getSignature(), f.isStatic()), FieldAnnotation.fromBCELField(cls, f));
 				}
 			} else if ("Ljava/lang/ThreadLocal;".equals(sig)) {
-				threadLocalFields.add(FieldAnnotation.fromBCELField(cls, f));
+				threadLocalNonStaticFields.add(FieldAnnotation.fromBCELField(cls, f));
 			} 
 		}
 	}
