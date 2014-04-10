@@ -1,5 +1,6 @@
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
@@ -8,8 +9,8 @@ public class HE_Sample {
 	
 
 	public static void main(String[] args) {
-		ReplacementExecutorProblem p = new ReplacementExecutorProblem();
-		p.reset();
+		LocalExecutorOkay p = new LocalExecutorOkay();
+		p.task();
 		
 		System.out.println("Should end");
 	}
@@ -18,6 +19,11 @@ public class HE_Sample {
 class SampleExecutable implements Runnable {
 	@Override
 	public void run() {
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		System.out.println("Hello");
 	}
 
@@ -85,6 +91,30 @@ class SingleThreadExecutorGood2 {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+		executor.shutdown();
+	}
+}
+
+class SingleThreadExecutorTryProblem {
+	//this won't get tagged
+	private ExecutorService executor;
+
+	public SingleThreadExecutorTryProblem() {
+		this.executor = Executors.newSingleThreadExecutor();
+	}
+	public void test() {
+		executor.execute(new SampleExecutable());
+		executor.execute(new SampleExecutable());
+	}
+	public void shutDown() {
+		try {
+			executor.awaitTermination(30, TimeUnit.SECONDS);
+			executor.shutdown();		//this doesn't count as shutdown, so it should be tagged.
+										//probably with a different bug
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
 	}
 }
 
@@ -104,7 +134,7 @@ class FixedThreadPoolProblem {
 }
 
 class CachedThreadPoolMehProblem {
-	//tag, sort of a false positive because JVM will exit after 60 seconds
+	//tag - this is bad practice, even though JVM will exit after 60 seconds
 	private ExecutorService executor;
 
 	public CachedThreadPoolMehProblem() {
@@ -119,7 +149,7 @@ class CachedThreadPoolMehProblem {
 }
 
 class SingleThreadExecutorThreadFactoryMehProblem {
-	//tag, but kind of a false positive - Daemon threads will not prevent hang
+	//tag - this is bad practice, even though the threads will terminate
 	private ExecutorService executor;
 
 	public SingleThreadExecutorThreadFactoryMehProblem() {
@@ -172,6 +202,15 @@ class ReplacementExecutorProblem {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public void test() {
+		executor.execute(new SampleExecutable());
+		executor.execute(new SampleExecutable());
+	}
+	
+	public void shutDown() {
+		executor.shutdownNow();
 	}
 	
 }
@@ -256,6 +295,56 @@ class ReplacementExecutorGood2 {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+	}
+	
+}
+
+
+class LocalExecutorProblem {
+	
+	public void task() {
+		//tag - the GC doesn't kill the internal threadpool
+		ExecutorService executor = Executors.newSingleThreadExecutor();
+		executor.execute(new SampleExecutable());
+		executor.execute(new SampleExecutable());
+	}
+	
+}
+
+class LocalExecutorOkay {
+	
+	public void task() {
+		//no tag, the local pool will be shutdown
+		ExecutorService executor = Executors.newSingleThreadExecutor();
+		executor.execute(new SampleExecutable());
+		executor.execute(new SampleExecutable());
+		executor.shutdown();
+	}
+	
+}
+
+class LocalExecutorOkay2 {
+	
+	public ExecutorService makeExecutor() {
+		//no tag, it is the responsibility of the super to shut this down
+		ExecutorService executor = Executors.newSingleThreadExecutor();
+		executor.execute(new SampleExecutable());
+		executor.execute(new SampleExecutable());
+
+		return executor;
+	}
+	
+}
+
+class LocalExecutorProblem2 {
+	
+	public void task() {
+		LocalExecutorOkay2 leo2 = new LocalExecutorOkay2();
+		
+		//tag, won't get shutdown
+		ExecutorService executor = leo2.makeExecutor();
+		executor.execute(new SampleExecutable());
+
 	}
 	
 }

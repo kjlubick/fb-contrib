@@ -62,6 +62,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 	public void visitClassContext(ClassContext classContext) {
 		try {
 			hangingCandidates = new HashMap<XField, FieldAnnotation>();
+			//fill up hangingCandidates
 			parseFields(classContext);
 
 			if (hangingCandidates.size() > 0) {
