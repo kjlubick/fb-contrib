@@ -50,10 +50,13 @@ public class LocalSynchronizedCollection extends LocalTypeDetector
 {
     private static Map<String, Integer> syncCtors = new HashMap<String, Integer>();
     static {
-        syncCtors.put("java/util/Vector", Integer.valueOf(Constants.MAJOR_1_1));
-        syncCtors.put("java/util/Hashtable", Integer.valueOf(Constants.MAJOR_1_1));
-        syncCtors.put("java/lang/StringBuffer", Integer.valueOf(Constants.MAJOR_1_5));
+    	syncCtors.put("java/util/Vector", Integer.valueOf(Constants.MAJOR_1_1));
+    	syncCtors.put("java/util/Hashtable", Integer.valueOf(Constants.MAJOR_1_1));
+    	syncCtors.put("java/lang/StringBuffer", Integer.valueOf(Constants.MAJOR_1_5));
     }
+    
+    
+    
     private static Set<String> syncMethods = new HashSet<String>();
     static {
         syncMethods.add("synchronizedCollection");
@@ -122,10 +125,7 @@ public class LocalSynchronizedCollection extends LocalTypeDetector
         for (Map.Entry<Integer, CollectionRegInfo> entry : syncRegs.entrySet()) {
             CollectionRegInfo cri = entry.getValue();
             if (!cri.getIgnore()) {
-                bugReporter.reportBug(new BugInstance(this, "LSYC_LOCAL_SYNCHRONIZED_COLLECTION", cri.getPriority())
-                            .addClass(this)
-                            .addMethod(this)
-                            .addSourceLine(cri.getSourceLineAnnotation()));
+                reportBug(cri);
             }
                 
         }
@@ -144,7 +144,7 @@ public class LocalSynchronizedCollection extends LocalTypeDetector
             
             if (seen == INVOKESPECIAL) {
                 if ("<init>".equals(getNameConstantOperand())) {
-                	Integer minVersion = syncCtors.get(getClassConstantOperand());
+                	Integer minVersion = getWatchedConstructors().get(getClassConstantOperand());
                 	if ((minVersion != null) && (classVersion >= minVersion.intValue())) {
                         tosIsSyncColReg = Integer.valueOf(-1);
                     }
@@ -217,20 +217,7 @@ public class LocalSynchronizedCollection extends LocalTypeDetector
                 }
             }
             
-            int curPC = getPC();
-            Iterator<CollectionRegInfo> it = syncRegs.values().iterator();
-            while (it.hasNext()) {
-                CollectionRegInfo cri = it.next();
-                if (cri.getEndPCRange() < curPC) {
-                    if (!cri.getIgnore()) {
-                        bugReporter.reportBug(new BugInstance(this, "LSYC_LOCAL_SYNCHRONIZED_COLLECTION", cri.getPriority())
-                                .addClass(this)
-                                .addMethod(this)
-                                .addSourceLine(cri.getSourceLineAnnotation()));                 
-                    }
-                    it.remove();
-                }
-            }
+            reportTroublesomeLocals();
         } finally {
 			TernaryPatcher.pre(stack, seen);
 			stack.sawOpcode(this, seen);
@@ -243,50 +230,31 @@ public class LocalSynchronizedCollection extends LocalTypeDetector
             }
         }
     }
-        
-    static class CollectionRegInfo
-    {
-        private SourceLineAnnotation slAnnotation;
-        private int priority = HIGH_PRIORITY;
-        private int endPCRange = Integer.MAX_VALUE;
-        
-        public CollectionRegInfo(SourceLineAnnotation sla, int endPC) {
-            slAnnotation = sla;
-            endPCRange = endPC;
-        }
-        
-        public CollectionRegInfo(int endPC) {
-            slAnnotation = null;
-            endPCRange = endPC;
-        }
-        
-        public SourceLineAnnotation getSourceLineAnnotation() {
-            return slAnnotation;
-        }
-        
-        public void setEndPCRange(int pc) {
-            endPCRange = pc;
-        }
-        
-        public int getEndPCRange() {
-            return endPCRange;
-        }
-        
-        public void setIgnore() {
-            slAnnotation = null;
-        }
-        
-        public boolean getIgnore() {
-            return slAnnotation == null;
-        }
-        
-        public void setPriority(int newPriority) {
-            if (newPriority > priority)
-                priority = newPriority;
-        }
-        
-        public int getPriority() {
-            return priority;
-        }
-    }
+
+	protected void reportTroublesomeLocals() {
+		int curPC = getPC();
+		Iterator<CollectionRegInfo> it = syncRegs.values().iterator();
+		while (it.hasNext()) {
+		    CollectionRegInfo cri = it.next();
+		    if (cri.getEndPCRange() < curPC) {
+		        if (!cri.getIgnore()) {
+		            reportBug(cri);                 
+		        }
+		        it.remove();
+		    }
+		}
+	}
+
+	@Override
+	protected void reportBug(CollectionRegInfo cri) {
+		bugReporter.reportBug(new BugInstance(this, "LSYC_LOCAL_SYNCHRONIZED_COLLECTION", cri.getPriority())
+		        .addClass(this)
+		        .addMethod(this)
+		        .addSourceLine(cri.getSourceLineAnnotation()));
+	}
+       
+    @Override
+    public Map<String, Integer> getWatchedConstructors() {
+		return syncCtors;
+	}
 }
