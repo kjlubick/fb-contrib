@@ -196,3 +196,8 @@ public class HangingExecutors extends BytecodeScanningDetector {
 	}
 	
 }
+
+
+class LocalHangingExecutor extends LocalTypeDetector {
+	
+}

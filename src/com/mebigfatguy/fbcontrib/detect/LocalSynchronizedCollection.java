@@ -46,7 +46,7 @@ import edu.umd.cs.findbugs.ba.ClassContext;
  * thread safe, using synchronized collections in this context makes no sense.
  */
 @CustomUserValue
-public class LocalSynchronizedCollection extends BytecodeScanningDetector
+public class LocalSynchronizedCollection extends LocalTypeDetector
 {
     private static Map<String, Integer> syncCtors = new HashMap<String, Integer>();
     static {
