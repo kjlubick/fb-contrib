@@ -47,7 +47,7 @@ public class LocalSynchronizedCollection extends LocalTypeDetector
 	static {
 		syncCtors.put("java/util/Vector", Integer.valueOf(Constants.MAJOR_1_1));
 		syncCtors.put("java/util/Hashtable", Integer.valueOf(Constants.MAJOR_1_1));
-		syncCtors.put("java/lang/StringBuffer", Integer.valueOf(Constants.MAJOR_1_5));
+		syncCtors.put("java/lang/StringBuffer", Integer.valueOf(Constants.MAJOR_1_5));		
 	}
 
 	private static final Map<String, Set<String>> synchClassMethods = new HashMap<String, Set<String>>();
@@ -76,7 +76,7 @@ public class LocalSynchronizedCollection extends LocalTypeDetector
 	
 
 	@Override
-	protected Map<String, Set<String>> getSyncClassMethods() {
+	protected Map<String, Set<String>> getWatchedClassMethods() {
 		return synchClassMethods;
 	}
 

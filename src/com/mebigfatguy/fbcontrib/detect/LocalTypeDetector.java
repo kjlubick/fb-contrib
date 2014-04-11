@@ -21,18 +21,38 @@ import edu.umd.cs.findbugs.ba.ClassContext;
 abstract class LocalTypeDetector extends BytecodeScanningDetector {
 
 	private OpcodeStack stack;
-	private Map<Integer, RegisterInfo> syncRegs;
-	private int classVersion;
+	private Map<Integer, RegisterInfo> suspectLocals;
+	private int classVersion; 
 
-	// map of constructors to java versions
+	/**
+	 * Should return a map of constructors that should be watched, as well as 
+	 * version number of Java that the given constructor becomes a bad idea.
+	 * 
+	 * e.g. StringBuffer was the only way to efficiently concatenate a string until
+	 * the faster, non-thread safe StringBuilder was introduced in 1.5.  Thus, in code
+	 * that targets before 1.5, FindBugs should not report a LocalSynchronizedCollection bug.
+	 * Therefore, the entry <"java/lang/StringBuffer", Constants.MAJOR_1_5> is in the returned map.
+	 * 
+	 * 
+	 * 
+	 */
 	protected abstract Map<String, Integer> getWatchedConstructors();
 
-	protected abstract Map<String, Set<String>> getSyncClassMethods();
+	/**
+	 * Should return a map of a class and a set of "factory" methods that create types
+	 * that should be reported buggy (when made as local variables).
+	 * @return
+	 */
+	protected abstract Map<String, Set<String>> getWatchedClassMethods();
 
+	/**
+	 * Given this RegisterInfo, report an appropriate bug.
+	 * @param cri
+	 */
 	protected abstract void reportBug(RegisterInfo cri);
 
 	/**
-	 * implements the visitor to create and clear the stack and syncRegs
+	 * implements the visitor to create and clear the stack and suspectLocals
 	 * 
 	 * @param classContext the context object of the currently parsed class 
 	 */
@@ -40,12 +60,12 @@ abstract class LocalTypeDetector extends BytecodeScanningDetector {
 	public void visitClassContext(ClassContext classContext) {
 		try {
 			stack = new OpcodeStack();
-			syncRegs = new HashMap<Integer, RegisterInfo>();
+			suspectLocals = new HashMap<Integer, RegisterInfo>();
 			classVersion = classContext.getJavaClass().getMajor();
 			super.visitClassContext(classContext);
 		} finally {
 			stack = null;
-			syncRegs = null;
+			suspectLocals = null;
 		}
 	}
 
@@ -56,10 +76,10 @@ abstract class LocalTypeDetector extends BytecodeScanningDetector {
 	 */
 	@Override
 	public void visitMethod(Method obj) {
-		syncRegs.clear();
+		suspectLocals.clear();
 		int[] parmRegs = RegisterUtils.getParameterRegisters(obj);
 		for (int pr : parmRegs) {
-			syncRegs.put(Integer.valueOf(pr), 
+			suspectLocals.put(Integer.valueOf(pr), 
 					new RegisterInfo(RegisterUtils.getLocalVariableEndRange(obj.getLocalVariableTable(), pr, 0)));
 		}
 	}
@@ -74,7 +94,7 @@ abstract class LocalTypeDetector extends BytecodeScanningDetector {
 		stack.resetForMethodEntry(this);
 		super.visitCode(obj);
 	
-		for (Map.Entry<Integer, RegisterInfo> entry : syncRegs.entrySet()) {
+		for (Map.Entry<Integer, RegisterInfo> entry : suspectLocals.entrySet()) {
 			RegisterInfo cri = entry.getValue();
 			if (!cri.getIgnore()) {
 				reportBug(cri);
@@ -84,10 +104,10 @@ abstract class LocalTypeDetector extends BytecodeScanningDetector {
 	}
 
 	/**
-	 * implements the visitor to find stores to locals of synchronized collections
+	 * implements the visitor to find the constructors defined in getWatchedConstructors()
+	 * and the method calls in getWatchedClassMethods()
 	 * 
-	 * @param seen
-	 *            the opcode of the currently parsed instruction
+	 * @param seen the opcode of the currently parsed instruction
 	 */
 	@Override
 	public void sawOpcode(int seen) {
@@ -99,29 +119,29 @@ abstract class LocalTypeDetector extends BytecodeScanningDetector {
 				tosIsSyncColReg = checkConstructors();
 			} else if (seen == INVOKESTATIC) {
 				tosIsSyncColReg = checkStaticCreations();
-			} else if ((seen == ASTORE) || ((seen >= ASTORE_0) && (seen <= ASTORE_3))) {
+			} else if (isAStore(seen)) {
 				dealWithStoring(seen);
-			} else if ((seen == ALOAD) || ((seen >= ALOAD_0) && (seen <= ALOAD_3))) {
+			} else if (isALoad(seen)) {
 				int reg = RegisterUtils.getALoadReg(this, seen);
-				RegisterInfo cri = syncRegs.get(Integer.valueOf(reg));
-				if ((cri != null) && !cri.getIgnore())
+				RegisterInfo cri = suspectLocals.get(Integer.valueOf(reg));
+				if ((cri != null) && !cri.getIgnore()) {
 					tosIsSyncColReg = Integer.valueOf(reg);
+				}
 			} else if ((seen == PUTFIELD) || (seen == ARETURN)) {
 				if (stack.getStackDepth() > 0) {
 					OpcodeStack.Item item = stack.getStackItem(0);
-					syncRegs.remove(item.getUserValue());
+					suspectLocals.remove(item.getUserValue());
 				}
 			}
 
-			if (syncRegs.size() > 0) {
-				if ((seen == INVOKESPECIAL) || (seen == INVOKEINTERFACE) || (seen == INVOKEVIRTUAL)
-						|| (seen == INVOKESTATIC)) {
+			if (suspectLocals.size() > 0) {
+				if (isInvokeInterfaceSpecialStaticOrVirtual(seen)) {
 					String sig = getSigConstantOperand();
 					int argCount = Type.getArgumentTypes(sig).length;
 					if (stack.getStackDepth() >= argCount) {
 						for (int i = 0; i < argCount; i++) {
 							OpcodeStack.Item item = stack.getStackItem(i);
-							RegisterInfo cri = syncRegs.get(item.getUserValue());
+							RegisterInfo cri = suspectLocals.get(item.getUserValue());
 							if (cri != null)
 								cri.setPriority(LOW_PRIORITY);
 						}
@@ -132,12 +152,12 @@ abstract class LocalTypeDetector extends BytecodeScanningDetector {
 					// synchronized blocks tend to know what's going on.
 					if (stack.getStackDepth() > 0) {
 						OpcodeStack.Item item = stack.getStackItem(0);
-						syncRegs.remove(item.getUserValue());
+						suspectLocals.remove(item.getUserValue());
 					}
 				} else if (seen == AASTORE) {
 					if (stack.getStackDepth() > 0) {
 						OpcodeStack.Item item = stack.getStackItem(0);
-						syncRegs.remove(item.getUserValue());
+						suspectLocals.remove(item.getUserValue());
 					}
 				}
 			}
@@ -156,24 +176,36 @@ abstract class LocalTypeDetector extends BytecodeScanningDetector {
 		}
 	}
 
+	protected static boolean isALoad(int seen) {
+		return (seen == ALOAD) || ((seen >= ALOAD_0) && (seen <= ALOAD_3));
+	}
+
+	protected static boolean isAStore(int seen) {
+		return (seen == ASTORE) || ((seen >= ASTORE_0) && (seen <= ASTORE_3));
+	}
+
+	private static boolean isInvokeInterfaceSpecialStaticOrVirtual(int seen) {
+		return (seen == INVOKESPECIAL) || (seen == INVOKEINTERFACE) || (seen == INVOKEVIRTUAL)	|| (seen == INVOKESTATIC);
+	}
+
 	protected void dealWithStoring(int seen) {
 		if (stack.getStackDepth() > 0) {
 			OpcodeStack.Item item = stack.getStackItem(0);
 			int reg = RegisterUtils.getAStoreReg(this, seen);
 			if (item.getUserValue() != null) {
-				if (!syncRegs.containsKey(Integer.valueOf(reg))) {
+				if (!suspectLocals.containsKey(Integer.valueOf(reg))) {
 					RegisterInfo cri = new RegisterInfo(SourceLineAnnotation.fromVisitedInstruction(this),
 							RegisterUtils.getLocalVariableEndRange(getMethod().getLocalVariableTable(), reg,
 									getNextPC()));
-					syncRegs.put(Integer.valueOf(reg), cri);
+					suspectLocals.put(Integer.valueOf(reg), cri);
 
 				}
 			} else {
-				RegisterInfo cri = syncRegs.get(Integer.valueOf(reg));
+				RegisterInfo cri = suspectLocals.get(Integer.valueOf(reg));
 				if (cri == null) {
 					cri = new RegisterInfo(RegisterUtils.getLocalVariableEndRange(getMethod()
 							.getLocalVariableTable(), reg, getNextPC()));
-					syncRegs.put(Integer.valueOf(reg), cri);
+					suspectLocals.put(Integer.valueOf(reg), cri);
 				}
 				cri.setIgnore();
 			}
@@ -182,7 +214,7 @@ abstract class LocalTypeDetector extends BytecodeScanningDetector {
 
 	protected Integer checkStaticCreations() {
 		Integer tosIsSyncColReg = null;
-		Map<String, Set<String>> mapOfClassToMethods = getSyncClassMethods();
+		Map<String, Set<String>> mapOfClassToMethods = getWatchedClassMethods();
 		for (Entry<String, Set<String>> entry: mapOfClassToMethods.entrySet())
 			if (entry.getKey().equals(getClassConstantOperand())) {
 				if (entry.getValue().contains(getNameConstantOperand())) {
@@ -205,7 +237,7 @@ abstract class LocalTypeDetector extends BytecodeScanningDetector {
 
 	protected void reportTroublesomeLocals() {
 		int curPC = getPC();
-		Iterator<RegisterInfo> it = syncRegs.values().iterator();
+		Iterator<RegisterInfo> it = suspectLocals.values().iterator();
 		while (it.hasNext()) {
 			RegisterInfo cri = it.next();
 			if (cri.getEndPCRange() < curPC) {
