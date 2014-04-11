@@ -3,6 +3,7 @@ package com.mebigfatguy.fbcontrib.detect;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.bcel.classfile.Code;
@@ -95,9 +96,9 @@ abstract class LocalTypeDetector extends BytecodeScanningDetector {
 			stack.precomputation(this);
 
 			if (seen == INVOKESPECIAL) {
-				tosIsSyncColReg = checkConstructors(tosIsSyncColReg);
+				tosIsSyncColReg = checkConstructors();
 			} else if (seen == INVOKESTATIC) {
-				tosIsSyncColReg = checkStaticCreations(tosIsSyncColReg);
+				tosIsSyncColReg = checkStaticCreations();
 			} else if ((seen == ASTORE) || ((seen >= ASTORE_0) && (seen <= ASTORE_3))) {
 				dealWithStoring(seen);
 			} else if ((seen == ALOAD) || ((seen >= ALOAD_0) && (seen <= ALOAD_3))) {
@@ -179,18 +180,20 @@ abstract class LocalTypeDetector extends BytecodeScanningDetector {
 		}
 	}
 
-	protected Integer checkStaticCreations(Integer tosIsSyncColReg) {
+	protected Integer checkStaticCreations() {
+		Integer tosIsSyncColReg = null;
 		Map<String, Set<String>> mapOfClassToMethods = getSyncClassMethods();
-		for (String className : mapOfClassToMethods.keySet())
-			if (className.equals(getClassConstantOperand())) {
-				if (mapOfClassToMethods.get(className).contains(getNameConstantOperand())) {
+		for (Entry<String, Set<String>> entry: mapOfClassToMethods.entrySet())
+			if (entry.getKey().equals(getClassConstantOperand())) {
+				if (entry.getValue().contains(getNameConstantOperand())) {
 					tosIsSyncColReg = Integer.valueOf(-1);
 				}
 			}
 		return tosIsSyncColReg;
 	}
 
-	protected Integer checkConstructors(Integer tosIsSyncColReg) {
+	protected Integer checkConstructors() {
+		Integer tosIsSyncColReg = null;
 		if ("<init>".equals(getNameConstantOperand())) {
 			Integer minVersion = getWatchedConstructors().get(getClassConstantOperand());
 			if ((minVersion != null) && (classVersion >= minVersion.intValue())) {
