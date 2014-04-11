@@ -31,16 +31,6 @@ public class HangingExecutors extends BytecodeScanningDetector {
 		hangableSig.add("Ljava/util/concurrent/ExecutorService;");
 	}
 	
-	 private static Set<String> executorsProblematicMethods = new HashSet<String>();
-	    static {
-	        executorsProblematicMethods.add("synchronizedCollection");
-	        executorsProblematicMethods.add("synchronizedList");
-	        executorsProblematicMethods.add("synchronizedMap");
-	        executorsProblematicMethods.add("synchronizedSet");
-	        executorsProblematicMethods.add("synchronizedSortedMap");
-	        executorsProblematicMethods.add("synchronizedSortedSet");
-	    }
-	
 	
 	private static final Set<String> terminatingMethods = new HashSet<String>();
 	
@@ -54,6 +44,8 @@ public class HangingExecutors extends BytecodeScanningDetector {
 	private Map<XField, FieldAnnotation> hangingFieldCandidates;
 	private OpcodeStack stack;
 	private String methodName;
+	
+	
 	
 	
 	public HangingExecutors(BugReporter reporter) {
@@ -199,5 +191,24 @@ public class HangingExecutors extends BytecodeScanningDetector {
 
 
 class LocalHangingExecutor extends LocalTypeDetector {
+
+	@Override
+	protected Map<String, Integer> getWatchedConstructors() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	protected Map<String, Set<String>> getWatchedClassMethods() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	protected void reportBug(RegisterInfo cri) {
+		// TODO Auto-generated method stub
+		
+	}
+	
 	
 }
