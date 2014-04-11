@@ -1,5 +1,6 @@
 package com.mebigfatguy.fbcontrib.detect;
 
+import static com.mebigfatguy.fbcontrib.utils.OpcodeUtils.*;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -176,17 +177,7 @@ abstract class LocalTypeDetector extends BytecodeScanningDetector {
 		}
 	}
 
-	protected static boolean isALoad(int seen) {
-		return (seen == ALOAD) || ((seen >= ALOAD_0) && (seen <= ALOAD_3));
-	}
-
-	protected static boolean isAStore(int seen) {
-		return (seen == ASTORE) || ((seen >= ASTORE_0) && (seen <= ASTORE_3));
-	}
-
-	private static boolean isInvokeInterfaceSpecialStaticOrVirtual(int seen) {
-		return (seen == INVOKESPECIAL) || (seen == INVOKEINTERFACE) || (seen == INVOKEVIRTUAL)	|| (seen == INVOKESTATIC);
-	}
+	
 
 	protected void dealWithStoring(int seen) {
 		if (stack.getStackDepth() > 0) {

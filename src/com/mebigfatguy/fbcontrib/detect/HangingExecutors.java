@@ -64,8 +64,8 @@ public class HangingExecutors extends BytecodeScanningDetector {
 	public void visitClassContext(ClassContext classContext) {
 		try {
 			hangingFieldCandidates = new HashMap<XField, FieldAnnotation>();
-			//fill up hangingCandidates
-			parseFields(classContext);
+
+			parseFieldsForHangingCandidates(classContext);
 
 			if (hangingFieldCandidates.size() > 0) {
 				stack = new OpcodeStack();
@@ -80,7 +80,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 		}
 	}
 	
-	private void parseFields(ClassContext classContext) {
+	private void parseFieldsForHangingCandidates(ClassContext classContext) {
 		JavaClass cls = classContext.getJavaClass();
 		Field[] fields = cls.getFields();
 		for (Field f : fields) {
@@ -97,7 +97,6 @@ public class HangingExecutors extends BytecodeScanningDetector {
 		for (Entry<XField, FieldAnnotation> entry : hangingFieldCandidates.entrySet()) {
 			FieldAnnotation fieldAn = entry.getValue();
 			if (fieldAn != null) {
-				//TODO Consider two types of bugs, one for never shut down, one for 
 				bugReporter.reportBug(new BugInstance(this, "HE_EXECUTOR_NEVER_SHUTDOWN", NORMAL_PRIORITY)
 				.addClass(this)
 				.addField(fieldAn)
