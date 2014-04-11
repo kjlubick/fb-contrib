@@ -1,6 +1,7 @@
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -10,6 +11,7 @@ public class LSYC_Sample {
     List<String> syncfield;
 
     public Object[] test1(String[] s) {
+    	//tag
         Vector<String> v = new Vector<String>();
         v.addAll(Arrays.asList(s));
         Collections.sort(v);
@@ -17,10 +19,16 @@ public class LSYC_Sample {
     }
 
     public void test2(Set<String> s) {
+    	//tag (currently at line 25 (+3 lines), which is in an odd spot
         Set<String> ss = Collections.<String> synchronizedSet(s);
-        for (String st : ss) {
-            System.out.println(st);
-        }
+        
+        synchronized (ss) {
+        	for (Iterator<String> iterator = ss.iterator(); iterator.hasNext();) {
+    			String string = (String) iterator.next();
+    			System.out.println(string);
+    		}
+		}
+        
     }
 
     public void test3(List<String> ls) {
@@ -30,9 +38,10 @@ public class LSYC_Sample {
     }
 
     public Map<String, Map<String, String>> test4() {
-        // report as low
+        //should tag?  isn't
         Map<String, Map<String, String>> main = new Hashtable<String, Map<String, String>>();
 
+        //tag, low
         Map<String, String> m = new Hashtable<String, String>();
         m.put("Hello", "there");
         main.put("First", m);
@@ -42,6 +51,7 @@ public class LSYC_Sample {
     }
 
     public String printString() {
+    	//tag, high
         StringBuffer buffer = new StringBuffer();
         for (int i = 0; i < 50; i++)
             buffer.append("Findbugs ");
