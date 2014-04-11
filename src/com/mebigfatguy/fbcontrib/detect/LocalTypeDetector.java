@@ -1,6 +1,7 @@
 package com.mebigfatguy.fbcontrib.detect;
 
 import java.util.Map;
+import java.util.Set;
 
 import edu.umd.cs.findbugs.BytecodeScanningDetector;
 import edu.umd.cs.findbugs.SourceLineAnnotation;
@@ -9,6 +10,8 @@ abstract class LocalTypeDetector extends BytecodeScanningDetector {
 
 	//map of constructors to java versions
 	protected abstract Map<String, Integer> getWatchedConstructors();
+
+	protected abstract Map<String, Set<String>> getSyncClassMethods();
 
 	protected abstract void reportBug(CollectionRegInfo cri);
 

@@ -34,7 +34,6 @@ import com.mebigfatguy.fbcontrib.utils.TernaryPatcher;
 
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
-import edu.umd.cs.findbugs.BytecodeScanningDetector;
 import edu.umd.cs.findbugs.OpcodeStack;
 import edu.umd.cs.findbugs.OpcodeStack.CustomUserValue;
 import edu.umd.cs.findbugs.SourceLineAnnotation;
@@ -48,23 +47,25 @@ import edu.umd.cs.findbugs.ba.ClassContext;
 @CustomUserValue
 public class LocalSynchronizedCollection extends LocalTypeDetector
 {
-    private static Map<String, Integer> syncCtors = new HashMap<String, Integer>();
+    private static final Map<String, Integer> syncCtors = new HashMap<String, Integer>();
     static {
     	syncCtors.put("java/util/Vector", Integer.valueOf(Constants.MAJOR_1_1));
     	syncCtors.put("java/util/Hashtable", Integer.valueOf(Constants.MAJOR_1_1));
     	syncCtors.put("java/lang/StringBuffer", Integer.valueOf(Constants.MAJOR_1_5));
     }
     
+    private static final Map<String, Set<String>> synchClassMethods = new HashMap<String, Set<String>>();
     
-    
-    private static Set<String> syncMethods = new HashSet<String>();
     static {
+    	Set<String> syncMethods = new HashSet<String>();
         syncMethods.add("synchronizedCollection");
         syncMethods.add("synchronizedList");
         syncMethods.add("synchronizedMap");
         syncMethods.add("synchronizedSet");
         syncMethods.add("synchronizedSortedMap");
         syncMethods.add("synchronizedSortedSet");
+        
+        synchClassMethods.put("java/util/Collections", syncMethods);
     }
     
     private BugReporter bugReporter;
@@ -143,18 +144,9 @@ public class LocalSynchronizedCollection extends LocalTypeDetector
             stack.precomputation(this);
             
             if (seen == INVOKESPECIAL) {
-                if ("<init>".equals(getNameConstantOperand())) {
-                	Integer minVersion = getWatchedConstructors().get(getClassConstantOperand());
-                	if ((minVersion != null) && (classVersion >= minVersion.intValue())) {
-                        tosIsSyncColReg = Integer.valueOf(-1);
-                    }
-                }
+                tosIsSyncColReg = checkConstructors(tosIsSyncColReg);
             } else if (seen == INVOKESTATIC) {
-                if ("java/util/Collections".equals(getClassConstantOperand())) {
-                    if (syncMethods.contains(getNameConstantOperand())) {
-                        tosIsSyncColReg = Integer.valueOf(-1);
-                    }
-                }
+                tosIsSyncColReg = checkStaticCreations(tosIsSyncColReg);
             } else if ((seen == ASTORE) || ((seen >= ASTORE_0) && (seen <= ASTORE_3))) {
                 if (stack.getStackDepth() > 0) {
                     OpcodeStack.Item item = stack.getStackItem(0);
@@ -230,6 +222,32 @@ public class LocalSynchronizedCollection extends LocalTypeDetector
             }
         }
     }
+
+	protected Integer checkStaticCreations(Integer tosIsSyncColReg) {
+		Map<String, Set<String>> mapOfClassToMethods = getSyncClassMethods();
+		for(String className : mapOfClassToMethods.keySet())
+		if (className.equals(getClassConstantOperand())) {
+		    if (mapOfClassToMethods.get(className).contains(getNameConstantOperand())) {
+		        tosIsSyncColReg = Integer.valueOf(-1);
+		    }
+		}
+		return tosIsSyncColReg;
+	}
+
+	@Override
+	protected Map<String, Set<String>> getSyncClassMethods() {
+		return synchClassMethods;
+	}
+
+	protected Integer checkConstructors(Integer tosIsSyncColReg) {
+		if ("<init>".equals(getNameConstantOperand())) {
+			Integer minVersion = getWatchedConstructors().get(getClassConstantOperand());
+			if ((minVersion != null) && (classVersion >= minVersion.intValue())) {
+		        tosIsSyncColReg = Integer.valueOf(-1);
+		    }
+		}
+		return tosIsSyncColReg;
+	}
 
 	protected void reportTroublesomeLocals() {
 		int curPC = getPC();
