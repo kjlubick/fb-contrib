@@ -24,16 +24,10 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.bcel.Constants;
-import org.apache.bcel.classfile.Code;
-import org.apache.bcel.classfile.Method;
-
-import com.mebigfatguy.fbcontrib.utils.RegisterUtils;
 
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
-import edu.umd.cs.findbugs.OpcodeStack;
 import edu.umd.cs.findbugs.OpcodeStack.CustomUserValue;
-import edu.umd.cs.findbugs.ba.ClassContext;
 
 /**
  * looks for allocations of synchronized collections that are stored in local variables, and 
@@ -76,6 +70,13 @@ public class LocalSynchronizedCollection extends LocalTypeDetector
 	
 
 	@Override
+	protected Map<String, Integer> getWatchedConstructors() {
+		return syncCtors;
+	}
+
+
+
+	@Override
 	protected Map<String, Set<String>> getWatchedClassMethods() {
 		return synchClassMethods;
 	}
@@ -86,10 +87,5 @@ public class LocalSynchronizedCollection extends LocalTypeDetector
 		.addClass(this)
 		.addMethod(this)
 		.addSourceLine(cri.getSourceLineAnnotation()));
-	}
-
-	@Override
-	public Map<String, Integer> getWatchedConstructors() {
-		return syncCtors;
 	}
 }

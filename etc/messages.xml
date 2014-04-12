@@ -4031,6 +4031,16 @@
             ]]>
         </Details>
     </BugPattern>
+	
+	<BugPattern type="HE_LOCAL_EXECUTOR_SERVICE">
+        <ShortDescription>Unusual Local Executor Service</ShortDescription>
+        <LongDescription>ExecutorService {2} is a local variable, which is unusual</LongDescription>
+        <Details>
+            <![CDATA[
+            <p>Work in progress</p>
+            ]]>
+        </Details>
+    </BugPattern>
     
     <BugPattern type="HE_EXECUTOR_OVERWRITTEN_WITHOUT_SHUTDOWN">
         <ShortDescription>An ExecutorService isn't shutdown before the reference to it is lost</ShortDescription>
