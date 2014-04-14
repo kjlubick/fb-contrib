@@ -227,8 +227,6 @@ class LocalHangingExecutor extends LocalTypeDetector {
 
 	@Override
 	protected void reportBug(RegisterInfo cri) {
-		//Debug.println("Found bug "+cri);
-		
 		//very important to report the bug under the top, parent detector, otherwise it gets filtered out
 		bugReporter.reportBug(new BugInstance(delegatingDetector, "HE_LOCAL_EXECUTOR_SERVICE", Priorities.HIGH_PRIORITY)
 		.addClass(this)
@@ -239,19 +237,16 @@ class LocalHangingExecutor extends LocalTypeDetector {
 	}
 	@Override
 	public void visitClassContext(ClassContext classContext) {
-		//Debug.println("Visiting Class Context");
 		super.visitClassContext(classContext);
 	}
 	
 	@Override
 	public void visitCode(Code obj) {
-		//Debug.println("Visiting Code "+obj);
 		super.visitCode(obj);
 	}
 	
 	@Override
 	public void visitMethod(Method obj) {
-		//Debug.println("Visiting Method "+obj);
 		super.visitMethod(obj);
 	}
 	
