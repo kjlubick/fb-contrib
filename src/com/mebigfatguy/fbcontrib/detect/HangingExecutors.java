@@ -23,6 +23,7 @@ import edu.umd.cs.findbugs.FieldAnnotation;
 import edu.umd.cs.findbugs.OpcodeStack;
 import edu.umd.cs.findbugs.Priorities;
 import edu.umd.cs.findbugs.ba.ClassContext;
+import edu.umd.cs.findbugs.ba.XClass;
 import edu.umd.cs.findbugs.ba.XFactory;
 import edu.umd.cs.findbugs.ba.XField;
 
@@ -139,8 +140,8 @@ public class HangingExecutors extends BytecodeScanningDetector {
 	}
 
 	/**
-	 * implements the visitor to look for methods that empty a bloatable field
-	 * if found, remove these fields from the current list
+	 * Browses for calls to shutdown() and shutdownNow(), and if they happen, remove
+	 * the hanging candidate, as there is a chance it will be called.
 	 * 
 	 * @param seen the opcode of the currently parsed instruction
 	 */
@@ -160,7 +161,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 					XField field = itm.getXField();
 					if (field != null) {
 						if (hangingFieldCandidates.containsKey(field)) {
-							checkMethodAsShutdownOrRelated(field);
+							checkMethodAsShutdown(field);
 						}
 					}
 				}
@@ -168,6 +169,14 @@ public class HangingExecutors extends BytecodeScanningDetector {
 			//Should not include private methods
 			else if (seen == ARETURN) {
 				removeFieldsThatGetReturned();
+			}
+			else if (seen == PUTFIELD) {
+				OpcodeStack.Item obj = stack.getStackItem(1);
+	            OpcodeStack.Item value = stack.getStackItem(0);
+	            XField f = getXFieldOperand();
+	            XClass x = getXClassOperand();
+				Debug.println("in "+methodName+" and "+ f+ " is being replaced.");
+				Debug.println(String.format("`%s` `%s` `%s`", x, obj, value));
 			}
 		}
 		finally {
@@ -185,9 +194,8 @@ public class HangingExecutors extends BytecodeScanningDetector {
 		}
 	}
 
-	protected void checkMethodAsShutdownOrRelated(XField field) {
+	protected void checkMethodAsShutdown(XField field) {
 		String mName = getNameConstantOperand();
-		//Debug.println("\t"+mName);
 		if (terminatingMethods.contains(mName)) {
 			hangingFieldCandidates.remove(field);
 		}
