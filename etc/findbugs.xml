@@ -34,7 +34,7 @@
     
     <Detector class="com.mebigfatguy.fbcontrib.detect.BloatedAssignmentScope" speed="fast" reports="BAS_BLOATED_ASSIGNMENT_SCOPE" hidden="true" />
 
-<!--COMMENT OUT FOR RELEASE -->
+<!-- COMMENT OUT FOR RELEASE -->
 
 	<Detector class="com.mebigfatguy.fbcontrib.collect.CollectStatistics" speed="fast" reports="" hidden="true" />
 
@@ -272,6 +272,8 @@
     
     <Detector class="com.mebigfatguy.fbcontrib.detect.ArrayIndexOutOfBounds" speed="fast" reports="AIOB_ARRAY_INDEX_OUT_OF_BOUNDS,AIOB_ARRAY_STORE_TO_NULL_REFERENCE" />
     
+    <Detector class="com.mebigfatguy.fbcontrib.detect.Unjitable" speed="fast" reports="UJM_UNJITABLE_METHOD" />
+    
     <!--  COMMENT OUT FOR POINT RELEASE  -->
     
 	<!-- BugPattern -->
@@ -479,4 +481,5 @@
 	<BugPattern abbrev="HENS" type="HE_EXECUTOR_NEVER_SHUTDOWN" category="CORRECTNESS" />
 	<BugPattern abbrev="HOWS" type="HE_EXECUTOR_OVERWRITTEN_WITHOUT_SHUTDOWN" category="CORRECTNESS" />
 	<BugPattern abbrev="HLES" type="HE_LOCAL_EXECUTOR_SERVICE" category="CORRECTNESS" />
+    <BugPattern abbrev="UJM" type="UJM_UNJITABLE_METHOD" category="PERFORMANCE" experimental="true" />
 </FindbugsPlugin>

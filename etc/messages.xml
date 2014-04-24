@@ -1390,7 +1390,7 @@
 	   <Details>
 	       <![CDATA[
 	       <p>Looks for private or static methods that have parameters that aren't used. These parameters
-            can be removed.</p>
+            can be removed, assuming the method isn't used through reflection.</p>
             <p>It is fast detector</p>
 	       ]]>
 	   </Details>
@@ -1414,7 +1414,7 @@
             ]]>
         </Details>
     </Detector>
-	
+
 	<Detector class="com.mebigfatguy.fbcontrib.detect.HangingExecutors">
         <Details>
             <![CDATA[
@@ -1422,6 +1422,17 @@
 			can potentially cause the JVM to not exit.</p>
             ]]>
         </Details>
+    </Detector>
+
+    <Detector class="com.mebigfatguy.fbcontrib.detect.Unjitable">
+    	<Details>
+    		<![CDATA[
+    		<p>This detector looks for methods that are longer than 8000 bytes. Methods this
+    		long are automatically disqualified by the jit for compilation and will always be
+    		emulated. Consider breaking this method up to avoid this, if performance is important.</p>
+    		<p>It is a fast detector.</p>
+    		]]>
+    	</Details>
     </Detector>
 
 	<Detector class="com.mebigfatguy.fbcontrib.debug.OCSDebugger">
@@ -4010,6 +4021,7 @@
             ]]>
         </Details>
     </BugPattern>
+<<<<<<< HEAD
 	
 	<BugPattern type="HE_EXECUTOR_NEVER_SHUTDOWN">
         <ShortDescription>ExecutorService field doesn't ever get shutdown</ShortDescription>
@@ -4087,6 +4099,20 @@
         </Details>
     </BugPattern>
 	
+=======
+    
+    <BugPattern type="UJM_UNJITABLE_METHOD">
+    	<ShortDescription>This method is too long to be compiled by the JIT</ShortDescription>
+    	<LongDescription>This method {1} is too long to be compiled by the JIT</LongDescription>
+    	<Details>
+    		<![CDATA[
+    		<p>This method is longer than 8000 bytes. By default the JIT will not attempt to compile this method no matter
+    		how hot it is, and so this method will always be interpreted. If performance is important, you should consider
+    		breaking this method up in smaller chunks. (And probably a good idea for readability too!).
+    		]]>
+    	</Details>
+    </BugPattern>
+>>>>>>> upstream/master
 
 	<!-- BugCode -->
 
@@ -4207,5 +4233,9 @@
 	<BugCode abbrev="UP">Unused Parameter</BugCode>
 	<BugCode abbrev="CD">Circular Dependencies</BugCode>
 	<BugCode abbrev="MUC">Modifying Unmodifiable Collection</BugCode>
+<<<<<<< HEAD
 	<BugCode abbrev="HE">Hanging ExecutorService</BugCode>
+=======
+	<BugCode abbrev="UJM">Unjitable method</BugCode>
+>>>>>>> upstream/master
 </MessageCollection>
