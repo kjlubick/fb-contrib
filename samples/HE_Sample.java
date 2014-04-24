@@ -1,14 +1,18 @@
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-
+//Expected bug count: 11
+//5 HE_EXECUTOR_NEVER_SHUTDOWN 
+//4 HE_LOCAL_EXECUTOR_SERVICE
+//1 HE_EXECUTOR_OVERWRITTEN_WITHOUT_SHUTDOWN
 public class HE_Sample {
 
 
 	public static void main(String[] args) {
-		LocalExecutorOkay p = new LocalExecutorOkay();
+		LocalExecutorProblem p = new LocalExecutorProblem();
 		p.task();
 
 		System.out.println("Should end");
@@ -303,7 +307,7 @@ class ReplacementExecutorGood2 {
 class LocalExecutorProblem {
 
 	public void task() {
-		//tag - the GC doesn't kill the internal threadpool
+		//tag
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 		executor.execute(new SampleExecutable());
 		executor.execute(new SampleExecutable());
@@ -311,27 +315,19 @@ class LocalExecutorProblem {
 
 }
 
-class LocalExecutorOkay {
+class LocalExecutorProblem1 {
 
 	public void task() {
-		//no tag, the local pool will be shutdown
-		ExecutorService executor = Executors.newSingleThreadExecutor();
+		//tag
+		ExecutorService executor = Executors.newCachedThreadPool(new ThreadFactory() {
+			
+			@Override
+			public Thread newThread(Runnable arg0) {
+				return new Thread(arg0);
+			}
+		});
 		executor.execute(new SampleExecutable());
 		executor.execute(new SampleExecutable());
-		executor.shutdown();
-	}
-
-}
-
-class LocalExecutorOkay2 {
-
-	public ExecutorService makeExecutor() {
-		//no tag, it is the responsibility of the super to shut this down
-		ExecutorService executor = Executors.newSingleThreadExecutor();
-		executor.execute(new SampleExecutable());
-		executor.execute(new SampleExecutable());
-
-		return executor;
 	}
 
 }
@@ -339,89 +335,29 @@ class LocalExecutorOkay2 {
 class LocalExecutorProblem2 {
 
 	public void task() {
-		LocalExecutorOkay2 leo2 = new LocalExecutorOkay2();
-
-		//tag, won't get shutdown
-		ExecutorService executor = leo2.makeExecutor();
-		executor.execute(new SampleExecutable());
-
+		//tag (checking for mislabeled objects)
+		Object executor = Executors.newCachedThreadPool(new ThreadFactory() {
+			
+			@Override
+			public Thread newThread(Runnable arg0) {
+				return new Thread(arg0);
+			}
+		});
+		
+		System.out.println(executor);
 	}
 
 }
 
-class LocalExecutorTryProblem {
-
-	public void task() {	
-		try {
-			//tag, shutdown might not get called
-			ExecutorService executor = Executors.newSingleThreadExecutor();
-			executor.execute(new SampleExecutable());
-			executor.execute(new SampleExecutable());
-			SampleExecutable.methodThrows();
-			executor.shutdown();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-	}
-
-}
-
-class LocalExecutorTryProblem2 {
-
-	public void task() {	
-		//tag, shutdown might not get called
-		ExecutorService executor = Executors.newSingleThreadExecutor();
-		try {
-			executor.execute(new SampleExecutable());
-			executor.execute(new SampleExecutable());
-			SampleExecutable.methodThrows();
-			executor.shutdown();
-			return;
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		System.out.println("We crashed, try one more execute");
-		executor.execute(new SampleExecutable());
-
-	}
-
-}
-
-class LocalExecutorTryOkay {
+class LocalExecutorProblem3 {
 
 	public void task() {
-		//no tag, the local pool will be shutdown
-
-		ExecutorService executor = Executors.newSingleThreadExecutor();
-		try {
-			executor.execute(new SampleExecutable());
-			executor.execute(new SampleExecutable());
-			SampleExecutable.methodThrows();
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			executor.shutdown();
-		}
-
+		//tag
+		ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
+		
+		System.out.println(executor);
 	}
-}
 
-class LocalExecutorTryOkay2 {
-
-	public void task() {
-		//no tag, the local pool will be shutdown
-
-		ExecutorService executor = Executors.newSingleThreadExecutor();
-		try {
-			executor.execute(new SampleExecutable());
-			executor.execute(new SampleExecutable());
-			SampleExecutable.methodThrows();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		executor.shutdown();		
-	}
 }
 
 
