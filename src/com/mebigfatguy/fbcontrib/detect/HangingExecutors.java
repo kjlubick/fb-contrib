@@ -47,7 +47,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 	
 	private final BugReporter bugReporter;
 	private Map<XField, FieldAnnotation> hangingFieldCandidates;
-	private Set<XField> exemptExecutors;
+	private Map<XField, Integer> exemptExecutors;
 	private OpcodeStack stack;
 	private String methodName;
 	
@@ -73,7 +73,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 		localHEDetector.visitClassContext(classContext);
 		try {
 			hangingFieldCandidates = new HashMap<XField, FieldAnnotation>();
-			exemptExecutors = new HashSet<XField>();
+			exemptExecutors = new HashMap<XField, Integer>();
 			parseFieldsForHangingCandidates(classContext);
 
 			if (hangingFieldCandidates.size() > 0) {
@@ -168,7 +168,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 					} 
 				}
 			}
-			//Should not include private methods
+			//TODO Should not include private methods
 			else if (seen == ARETURN) {
 				removeFieldsThatGetReturned();
 			}
@@ -178,21 +178,40 @@ public class HangingExecutors extends BytecodeScanningDetector {
 	            XField f = getXFieldOperand();
 //	            XClass x = getXClassOperand();
 				Debug.println(seen+ " in "+methodName+" and "+ f+ " is being replaced.");
+				Debug.println("Exempt "+exemptExecutors);
 //				Debug.println(String.format("`%s` `%s` `%s` `%s`", x, obj, value, f.getSignature()));
-				if ("Ljava/util/concurrent/ExecutorService;".equals(f.getSignature()) && !exemptExecutors.contains(f)) {
+				if ("Ljava/util/concurrent/ExecutorService;".equals(f.getSignature()) && !checkException(f)) {
 					bugReporter.reportBug(new BugInstance(this, "HE_EXECUTOR_OVERWRITTEN_WITHOUT_SHUTDOWN", Priorities.HIGH_PRIORITY)
 					.addClass(this)
 					.addMethod(this)
 					.addField(f)
 					.addSourceLine(this));
-				} else if (exemptExecutors.contains(f)) {
+				} else if (exemptExecutors.containsKey(f)) {
 					Debug.println("Was exempted");
+				}
+				//after it's been replaced, it no longer uses its exemption. 
+				exemptExecutors.remove(f);
+			}
+			else if (seen == IFNONNULL) {
+				OpcodeStack.Item nullCheckItem = stack.getStackItem(0);
+				XField fieldWhichWasNullChecked = nullCheckItem.getXField();
+				if (fieldWhichWasNullChecked != null) {
+					exemptExecutors.put(fieldWhichWasNullChecked, getPC() + getBranchOffset());
 				}
 			}
 		}
 		finally {
 			stack.sawOpcode(this, seen);
 		}
+	}
+
+
+	protected boolean checkException(XField f) {
+		if (!exemptExecutors.containsKey(f)) 
+			return false;
+		int i = exemptExecutors.get(f).intValue();
+		
+		return i == -1 || getPC() < i;
 	}
 
 	private void removeFieldsThatGetReturned() {
@@ -209,7 +228,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 	private void addExemptionIfShutdownCalled(XField fieldOnWhichMethodIsInvoked) {
 		String methodBeingInvoked = getNameConstantOperand();
 		if (shutdownMethods.contains(methodBeingInvoked)) {
-			exemptExecutors.add(fieldOnWhichMethodIsInvoked);
+			exemptExecutors.put(fieldOnWhichMethodIsInvoked, -1);
 		}
 	}
 
