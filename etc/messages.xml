@@ -4021,7 +4021,6 @@
             ]]>
         </Details>
     </BugPattern>
-<<<<<<< HEAD
 	
 	<BugPattern type="HE_EXECUTOR_NEVER_SHUTDOWN">
         <ShortDescription>ExecutorService field doesn't ever get shutdown</ShortDescription>
@@ -4098,8 +4097,6 @@
             ]]>
         </Details>
     </BugPattern>
-	
-=======
     
     <BugPattern type="UJM_UNJITABLE_METHOD">
     	<ShortDescription>This method is too long to be compiled by the JIT</ShortDescription>
@@ -4112,8 +4109,6 @@
     		]]>
     	</Details>
     </BugPattern>
->>>>>>> upstream/master
-
 	<!-- BugCode -->
 
 	<BugCode abbrev="ISB">Inefficient String Buffering</BugCode>
@@ -4233,9 +4228,6 @@
 	<BugCode abbrev="UP">Unused Parameter</BugCode>
 	<BugCode abbrev="CD">Circular Dependencies</BugCode>
 	<BugCode abbrev="MUC">Modifying Unmodifiable Collection</BugCode>
-<<<<<<< HEAD
 	<BugCode abbrev="HE">Hanging ExecutorService</BugCode>
-=======
 	<BugCode abbrev="UJM">Unjitable method</BugCode>
->>>>>>> upstream/master
 </MessageCollection>
