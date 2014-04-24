@@ -149,9 +149,6 @@ public class HangingExecutors extends BytecodeScanningDetector {
 	@Override
 	public void sawOpcode(int seen) {
 		try {
-			if (hangingFieldCandidates.isEmpty())
-				return;
-
 			stack.precomputation(this);
 
 			if ((seen == INVOKEVIRTUAL) || (seen == INVOKEINTERFACE)) {
@@ -176,8 +173,15 @@ public class HangingExecutors extends BytecodeScanningDetector {
 	            OpcodeStack.Item value = stack.getStackItem(0);
 	            XField f = getXFieldOperand();
 	            XClass x = getXClassOperand();
-				Debug.println("in "+methodName+" and "+ f+ " is being replaced.");
-				Debug.println(String.format("`%s` `%s` `%s`", x, obj, value));
+				Debug.println(seen+ " in "+methodName+" and "+ f+ " is being replaced.");
+				Debug.println(String.format("`%s` `%s` `%s` `%s`", x, obj, value, f.getSignature()));
+				if ("Ljava/util/concurrent/ExecutorService;".equals(f.getSignature())) {
+					bugReporter.reportBug(new BugInstance(this, "HE_EXECUTOR_OVERWRITTEN_WITHOUT_SHUTDOWN", Priorities.HIGH_PRIORITY)
+					.addClass(this)
+					.addMethod(this)
+					.addSourceLine(this)
+					.addField(f));
+				}
 			}
 		}
 		finally {
