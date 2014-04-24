@@ -37,16 +37,17 @@ public class HangingExecutors extends BytecodeScanningDetector {
 	}
 	
 	
-	private static final Set<String> terminatingMethods = new HashSet<String>();
+	private static final Set<String> shutdownMethods = new HashSet<String>();
 	
 	static {
-		terminatingMethods.add("shutdown");
-		terminatingMethods.add("shutdownNow");
+		shutdownMethods.add("shutdown");
+		shutdownMethods.add("shutdownNow");
 	}
 	
 	
 	private final BugReporter bugReporter;
 	private Map<XField, FieldAnnotation> hangingFieldCandidates;
+	private Set<XField> exemptExecutors;
 	private OpcodeStack stack;
 	private String methodName;
 	
@@ -72,7 +73,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 		localHEDetector.visitClassContext(classContext);
 		try {
 			hangingFieldCandidates = new HashMap<XField, FieldAnnotation>();
-
+			exemptExecutors = new HashSet<XField>();
 			parseFieldsForHangingCandidates(classContext);
 
 			if (hangingFieldCandidates.size() > 0) {
@@ -83,8 +84,12 @@ public class HangingExecutors extends BytecodeScanningDetector {
 			}
 		} finally {
 			stack = null;
-			hangingFieldCandidates.clear();
+			if (hangingFieldCandidates != null)
+				hangingFieldCandidates.clear();
 			hangingFieldCandidates = null;
+			if (exemptExecutors != null)
+				exemptExecutors.clear();
+			exemptExecutors = null;
 		}
 		
 	}
@@ -122,7 +127,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 	@Override
 	public void visitCode(Code obj) {
 		stack.resetForMethodEntry(this);
-
+		exemptExecutors.clear();
 		if ("<clinit>".equals(methodName) || "<init>".equals(methodName))
 			return;
 
@@ -155,13 +160,12 @@ public class HangingExecutors extends BytecodeScanningDetector {
 				String sig = getSigConstantOperand();
 				int argCount = Type.getArgumentTypes(sig).length;
 				if (stack.getStackDepth() > argCount) {
-					OpcodeStack.Item itm = stack.getStackItem(argCount);
-					XField field = itm.getXField();
-					if (field != null) {
-						if (hangingFieldCandidates.containsKey(field)) {
-							checkMethodAsShutdown(field);
-						}
-					}
+					OpcodeStack.Item invokeeItem = stack.getStackItem(argCount);
+					XField fieldOnWhichMethodIsInvoked = invokeeItem.getXField();
+					if (fieldOnWhichMethodIsInvoked != null) {		
+						removeCandidateIfShutdownCalled(fieldOnWhichMethodIsInvoked);
+						addExemptionIfShutdownCalled(fieldOnWhichMethodIsInvoked);
+					} 
 				}
 			}
 			//Should not include private methods
@@ -169,18 +173,20 @@ public class HangingExecutors extends BytecodeScanningDetector {
 				removeFieldsThatGetReturned();
 			}
 			else if (seen == PUTFIELD) {
-				OpcodeStack.Item obj = stack.getStackItem(1);
-	            OpcodeStack.Item value = stack.getStackItem(0);
+//				OpcodeStack.Item obj = stack.getStackItem(1);
+//	            OpcodeStack.Item value = stack.getStackItem(0);
 	            XField f = getXFieldOperand();
-	            XClass x = getXClassOperand();
+//	            XClass x = getXClassOperand();
 				Debug.println(seen+ " in "+methodName+" and "+ f+ " is being replaced.");
-				Debug.println(String.format("`%s` `%s` `%s` `%s`", x, obj, value, f.getSignature()));
-				if ("Ljava/util/concurrent/ExecutorService;".equals(f.getSignature())) {
+//				Debug.println(String.format("`%s` `%s` `%s` `%s`", x, obj, value, f.getSignature()));
+				if ("Ljava/util/concurrent/ExecutorService;".equals(f.getSignature()) && !exemptExecutors.contains(f)) {
 					bugReporter.reportBug(new BugInstance(this, "HE_EXECUTOR_OVERWRITTEN_WITHOUT_SHUTDOWN", Priorities.HIGH_PRIORITY)
 					.addClass(this)
 					.addMethod(this)
-					.addSourceLine(this)
-					.addField(f));
+					.addField(f)
+					.addSourceLine(this));
+				} else if (exemptExecutors.contains(f)) {
+					Debug.println("Was exempted");
 				}
 			}
 		}
@@ -189,9 +195,10 @@ public class HangingExecutors extends BytecodeScanningDetector {
 		}
 	}
 
-	protected void removeFieldsThatGetReturned() {
+	private void removeFieldsThatGetReturned() {
 		if (stack.getStackDepth() > 0) {
-			OpcodeStack.Item returnItem = stack.getStackItem(0);
+			
+			OpcodeStack.Item returnItem = stack.getStackItem(0); //top thing on the stack was the variable being returned
 			XField field = returnItem.getXField();
 			if (field != null) {
 				hangingFieldCandidates.remove(field);
@@ -199,10 +206,20 @@ public class HangingExecutors extends BytecodeScanningDetector {
 		}
 	}
 
-	protected void checkMethodAsShutdown(XField field) {
-		String mName = getNameConstantOperand();
-		if (terminatingMethods.contains(mName)) {
-			hangingFieldCandidates.remove(field);
+	private void addExemptionIfShutdownCalled(XField fieldOnWhichMethodIsInvoked) {
+		String methodBeingInvoked = getNameConstantOperand();
+		if (shutdownMethods.contains(methodBeingInvoked)) {
+			exemptExecutors.add(fieldOnWhichMethodIsInvoked);
+		}
+	}
+
+
+	private void removeCandidateIfShutdownCalled(XField fieldOnWhichMethodIsInvoked) {
+		if (hangingFieldCandidates.containsKey(fieldOnWhichMethodIsInvoked)) {
+			String methodBeingInvoked = getNameConstantOperand();
+			if (shutdownMethods.contains(methodBeingInvoked)) {
+				hangingFieldCandidates.remove(fieldOnWhichMethodIsInvoked);
+			}
 		}
 	}
 	
