@@ -36,6 +36,8 @@ public class LSYC_Sample {
         // don't report
         List<String> a = Collections.synchronizedList(ls);
         syncfield = a;
+        
+        System.out.println(syncfield);
     }
     
     public List<String> getList() {

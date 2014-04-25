@@ -145,6 +145,8 @@ public class ModifyingUnmodifiableCollection extends BytecodeScanningDetector {
                     }
                 }
                 break;
+                default:
+                	break;
             }
         } catch (ClassNotFoundException cnfe) {
             bugReporter.reportMissingClass(cnfe);
