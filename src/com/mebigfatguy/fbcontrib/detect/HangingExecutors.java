@@ -1,3 +1,22 @@
+/*
+ * fb-contrib - Auxiliary detectors for Java programs
+ * Copyright (C) 2005-2014 Kevin Lubick
+ * Copyright (C) 2005-2014 Dave Brosius
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
 package com.mebigfatguy.fbcontrib.detect;
 
 import java.util.HashMap;
@@ -24,6 +43,9 @@ import edu.umd.cs.findbugs.ba.ClassContext;
 import edu.umd.cs.findbugs.ba.XFactory;
 import edu.umd.cs.findbugs.ba.XField;
 
+/**
+ * looks for executors that are never shutdown, which will not allow the application to terminate
+ */
 public class HangingExecutors extends BytecodeScanningDetector {
 	
 	private static final Set<String> hangableSig = new HashSet<String>();
@@ -71,7 +93,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 			exemptExecutors = new HashMap<XField, Integer>();
 			parseFieldsForHangingCandidates(classContext);
 
-			if (hangingFieldCandidates.size() > 0) {
+			if (!hangingFieldCandidates.isEmpty()) {
 				stack = new OpcodeStack();
 				super.visitClassContext(classContext);
 
@@ -79,11 +101,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 			}
 		} finally {
 			stack = null;
-			if (hangingFieldCandidates != null)
-				hangingFieldCandidates.clear();
 			hangingFieldCandidates = null;
-			if (exemptExecutors != null)
-				exemptExecutors.clear();
 			exemptExecutors = null;
 		}
 		
@@ -94,9 +112,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 		Field[] fields = cls.getFields();
 		for (Field f : fields) {
 			String sig = f.getSignature();
-			//Debug.println(sig);
 			if (hangableSig.contains(sig)) {
-				//Debug.println("yes");
 				hangingFieldCandidates.put(XFactory.createXField(cls.getClassName(), f.getName(), f.getSignature(), f.isStatic()), FieldAnnotation.fromBCELField(cls, f));
 			}
 		}
@@ -106,7 +122,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 		for (Entry<XField, FieldAnnotation> entry : hangingFieldCandidates.entrySet()) {
 			FieldAnnotation fieldAn = entry.getValue();
 			if (fieldAn != null) {
-				bugReporter.reportBug(new BugInstance(this, "HE_EXECUTOR_NEVER_SHUTDOWN", NORMAL_PRIORITY)
+				bugReporter.reportBug(new BugInstance(this, "HES_EXECUTOR_NEVER_SHUTDOWN", NORMAL_PRIORITY)
 				.addClass(this)
 				.addField(fieldAn)
 				.addField(entry.getKey()));
@@ -126,7 +142,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 		if ("<clinit>".equals(methodName) || "<init>".equals(methodName))
 			return;
 
-		if (hangingFieldCandidates.size() > 0)
+		if (!hangingFieldCandidates.isEmpty())
 			super.visitCode(obj);
 	}
 	
@@ -170,7 +186,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 			else if (seen == PUTFIELD) {
 	            XField f = getXFieldOperand();
 				if ("Ljava/util/concurrent/ExecutorService;".equals(f.getSignature()) && !checkException(f)) {
-					bugReporter.reportBug(new BugInstance(this, "HE_EXECUTOR_OVERWRITTEN_WITHOUT_SHUTDOWN", Priorities.HIGH_PRIORITY)
+					bugReporter.reportBug(new BugInstance(this, "HES_EXECUTOR_OVERWRITTEN_WITHOUT_SHUTDOWN", Priorities.HIGH_PRIORITY)
 					.addClass(this)
 					.addMethod(this)
 					.addField(f)
@@ -193,7 +209,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 	}
 
 
-	protected boolean checkException(XField f) {
+	private boolean checkException(XField f) {
 		if (!exemptExecutors.containsKey(f)) 
 			return false;
 		int i = exemptExecutors.get(f).intValue();
@@ -203,7 +219,6 @@ public class HangingExecutors extends BytecodeScanningDetector {
 
 	private void removeFieldsThatGetReturned() {
 		if (stack.getStackDepth() > 0) {
-			
 			OpcodeStack.Item returnItem = stack.getStackItem(0); //top thing on the stack was the variable being returned
 			XField field = returnItem.getXField();
 			if (field != null) {
@@ -272,7 +287,7 @@ class LocalHangingExecutor extends LocalTypeDetector {
 	@Override
 	protected void reportBug(RegisterInfo cri) {
 		//very important to report the bug under the top, parent detector, otherwise it gets filtered out
-		bugReporter.reportBug(new BugInstance(delegatingDetector, "HE_LOCAL_EXECUTOR_SERVICE", Priorities.HIGH_PRIORITY)
+		bugReporter.reportBug(new BugInstance(delegatingDetector, "HES_LOCAL_EXECUTOR_SERVICE", Priorities.HIGH_PRIORITY)
 		.addClass(this)
 		.addMethod(this)
 		.addSourceLine(cri.getSourceLineAnnotation()));
