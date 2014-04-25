@@ -185,17 +185,11 @@ public class HangingExecutors extends BytecodeScanningDetector {
 			}
 			else if (seen == PUTFIELD) {
 	            XField f = getXFieldOperand();
-				if ("Ljava/util/concurrent/ExecutorService;".equals(f.getSignature()) && !checkException(f)) {
-					bugReporter.reportBug(new BugInstance(this, "HES_EXECUTOR_OVERWRITTEN_WITHOUT_SHUTDOWN", Priorities.HIGH_PRIORITY)
-					.addClass(this)
-					.addMethod(this)
-					.addField(f)
-					.addSourceLine(this));
-				} 
-				//after it's been replaced, it no longer uses its exemption. 
-				exemptExecutors.remove(f);
+	            if (f != null)
+	            	reportOverwrittenField(f);
 			}
 			else if (seen == IFNONNULL) {
+				//indicates a null check, which means that we get an exemption until the end of the branch
 				OpcodeStack.Item nullCheckItem = stack.getStackItem(0);
 				XField fieldWhichWasNullChecked = nullCheckItem.getXField();
 				if (fieldWhichWasNullChecked != null) {
@@ -206,6 +200,19 @@ public class HangingExecutors extends BytecodeScanningDetector {
 		finally {
 			stack.sawOpcode(this, seen);
 		}
+	}
+
+
+	protected void reportOverwrittenField(XField f) {
+		if ("Ljava/util/concurrent/ExecutorService;".equals(f.getSignature()) && !checkException(f)) {
+			bugReporter.reportBug(new BugInstance(this, "HES_EXECUTOR_OVERWRITTEN_WITHOUT_SHUTDOWN", Priorities.NORMAL_PRIORITY)
+			.addClass(this)
+			.addMethod(this)
+			.addField(f)
+			.addSourceLine(this));
+		} 
+		//after it's been replaced, it no longer uses its exemption. 
+		exemptExecutors.remove(f);
 	}
 
 
@@ -287,7 +294,7 @@ class LocalHangingExecutor extends LocalTypeDetector {
 	@Override
 	protected void reportBug(RegisterInfo cri) {
 		//very important to report the bug under the top, parent detector, otherwise it gets filtered out
-		bugReporter.reportBug(new BugInstance(delegatingDetector, "HES_LOCAL_EXECUTOR_SERVICE", Priorities.HIGH_PRIORITY)
+		bugReporter.reportBug(new BugInstance(delegatingDetector, "HES_LOCAL_EXECUTOR_SERVICE", NORMAL_PRIORITY)
 		.addClass(this)
 		.addMethod(this)
 		.addSourceLine(cri.getSourceLineAnnotation()));
