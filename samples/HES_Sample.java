@@ -362,6 +362,8 @@ class LocalExecutorProblem3 {
 		ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
 		
 		System.out.println(executor);
+		
+		executor.shutdown();
 	}
 
 }

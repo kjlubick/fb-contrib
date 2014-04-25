@@ -481,8 +481,8 @@
     <BugPattern abbrev="MUC" type="MUC_MODIFYING_UNMODIFIABLE_COLLECTION" category="CORRECTNESS" experimental="true" />
 	<BugPattern abbrev="UJM" type="UJM_UNJITABLE_METHOD" category="PERFORMANCE" experimental="true" />	
 	<!--Make these experimental before pushing upstream-->	
-	<BugPattern abbrev="HES" type="HE_EXECUTOR_NEVER_SHUTDOWN" category="CORRECTNESS" />
-	<BugPattern abbrev="HES" type="HE_EXECUTOR_OVERWRITTEN_WITHOUT_SHUTDOWN" category="CORRECTNESS" />
-	<BugPattern abbrev="HES" type="HE_LOCAL_EXECUTOR_SERVICE" category="CORRECTNESS" />
+	<BugPattern abbrev="HES" type="HES_EXECUTOR_NEVER_SHUTDOWN" category="CORRECTNESS" />
+	<BugPattern abbrev="HES" type="HES_EXECUTOR_OVERWRITTEN_WITHOUT_SHUTDOWN" category="CORRECTNESS" />
+	<BugPattern abbrev="HES" type="HES_LOCAL_EXECUTOR_SERVICE" category="CORRECTNESS" />
     <!--End experimental -->
 </FindbugsPlugin>
