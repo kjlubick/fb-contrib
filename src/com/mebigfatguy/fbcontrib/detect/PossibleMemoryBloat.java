@@ -151,11 +151,8 @@ public class PossibleMemoryBloat extends BytecodeScanningDetector
 			}
 		} finally {
 			stack = null;
-			bloatableCandidates.clear();
 			bloatableCandidates = null;
-			bloatableFields.clear();
 			bloatableFields = null;
-			threadLocalNonStaticFields.clear();
 			threadLocalNonStaticFields = null;
 		}
 	}
