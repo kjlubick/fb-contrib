@@ -7,10 +7,10 @@ import java.util.Set;
 
 @SuppressWarnings("unused")
 public class PMB_Sample {
-    private static Set<String> bl_data = new HashSet<String>();		//report
-    private static List<String> data = new ArrayList<String>();		//noreport
-    private static Set<String> inner_data = new HashSet<String>();	//noreport
-    private static StringBuilder return_data = new StringBuilder();	//noreport
+    private static Set<String> bl_data = new HashSet<String>();		//tag
+    private static List<String> data = new ArrayList<String>();		//no tag
+    private static Set<String> inner_data = new HashSet<String>();	//no tag
+    private static StringBuilder return_data = new StringBuilder();	//no tag
     
     private static final Set<String> bloatableSigs = new HashSet<String>();
 	static {
@@ -48,7 +48,7 @@ public class PMB_Sample {
 		bloatableSigs.add("Ljava/util/Vector;");
 	}
 
-    
+    //tag
 	private ThreadLocal<DateFormat> local = new ThreadLocal<DateFormat>() {
         @Override
         protected DateFormat initialValue() {
@@ -66,6 +66,8 @@ public class PMB_Sample {
     public void add(String s) {
         bl_data.add(s);
         data.add(s);
+        System.out.println(staticLocal);
+        System.out.println(local);
     }
 
     public void remove(String s) {
