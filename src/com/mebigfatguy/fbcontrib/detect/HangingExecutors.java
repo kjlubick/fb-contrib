@@ -32,9 +32,6 @@ import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.Type;
 
-import com.mebigfatguy.fbcontrib.debug.Debug;
-
-import java.util.Arrays;
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
 import edu.umd.cs.findbugs.BytecodeScanningDetector;
@@ -50,38 +47,38 @@ import edu.umd.cs.findbugs.ba.XField;
  * looks for executors that are never shutdown, which will not allow the application to terminate
  */
 public class HangingExecutors extends BytecodeScanningDetector {
-	
+
 	private static final Set<String> hangableSig = new HashSet<String>();
-	
+
 	static {
 		hangableSig.add("Ljava/util/concurrent/ExecutorService;");
 	}
-	
-	
+
+
 	private static final Set<String> shutdownMethods = new HashSet<String>();
-	
+
 	static {
 		shutdownMethods.add("shutdown");
 		shutdownMethods.add("shutdownNow");
 	}
-	
-	
+
+
 	private final BugReporter bugReporter;
 	private Map<XField, AnnotationPriority> hangingFieldCandidates;
 	private Map<XField, Integer> exemptExecutors;
 	private OpcodeStack stack;
 	private String methodName;
-	
+
 	private LocalHangingExecutor localHEDetector;
-	
-	
-	
+
+
+
 	public HangingExecutors(BugReporter reporter) {
 		this.bugReporter=reporter;
 		this.localHEDetector = new LocalHangingExecutor(this, reporter);
 	}
-	
-	
+
+
 	/**
 	 * finds ExecutorService objects that don't get a call to the terminating methods,
 	 * and thus, never appear to be shutdown properly (the threads exist until shutdown is called)
@@ -107,9 +104,9 @@ public class HangingExecutors extends BytecodeScanningDetector {
 			hangingFieldCandidates = null;
 			exemptExecutors = null;
 		}
-		
+
 	}
-	
+
 	private void parseFieldsForHangingCandidates(ClassContext classContext) {
 		JavaClass cls = classContext.getJavaClass();
 		Field[] fields = cls.getFields();
@@ -120,7 +117,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 			}
 		}
 	}
-	
+
 	private void reportHangingExecutorFieldBugs() {
 		for (Entry<XField, AnnotationPriority> entry : hangingFieldCandidates.entrySet()) {
 			AnnotationPriority fieldAn = entry.getValue();
@@ -132,7 +129,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 			}
 		}
 	}
-	
+
 	/**
 	 * implements the visitor to reset the opcode stack
 	 * 
@@ -147,7 +144,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 		if (!hangingFieldCandidates.isEmpty())
 			super.visitCode(obj);
 	}
-	
+
 	/**
 	 * implements the visitor to collect the method name
 	 * 
@@ -168,7 +165,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 	public void sawOpcode(int seen) {
 		if ("<clinit>".equals(methodName) || "<init>".equals(methodName))
 		{
-			handleInitialization(seen);
+			lookForCustomThreadFactoriesInConstructors(seen);
 			return;
 		}
 		try {
@@ -192,9 +189,9 @@ public class HangingExecutors extends BytecodeScanningDetector {
 				removeFieldsThatGetReturned();
 			}
 			else if (seen == PUTFIELD) {
-	            XField f = getXFieldOperand();
-	            if (f != null)
-	            	reportOverwrittenField(f);
+				XField f = getXFieldOperand();
+				if (f != null)
+					reportOverwrittenField(f);
 			}
 			else if (seen == IFNONNULL) {
 				//indicates a null check, which means that we get an exemption until the end of the branch
@@ -211,38 +208,32 @@ public class HangingExecutors extends BytecodeScanningDetector {
 	}
 
 
-	private void handleInitialization(int seen) {
+	private void lookForCustomThreadFactoriesInConstructors(int seen) {
 		try {
 			stack.precomputation(this);
 			if (seen == PUTFIELD) {
-	            XField f = getXFieldOperand();
-	            if (f != null && "Ljava/util/concurrent/ExecutorService;".equals(f.getSignature())){
-	            	Debug.println("Last thing" + stack.getStackItem(0));
-	            	Type[] argumentTypes = Type.getArgumentTypes(stack.getStackItem(0).getReturnValueOf().getSignature());
-					Debug.println("Last thing's signature" + Arrays.toString(argumentTypes));
-					
+				XField f = getXFieldOperand();
+				if (f != null && "Ljava/util/concurrent/ExecutorService;".equals(f.getSignature())){
+					//look at the top of the stack, get the arguments passed into the function that was called
+					//and then pull out the types.
+					//if the last type is a ThreadFactory, set the priority to low
+					Type[] argumentTypes = Type.getArgumentTypes(stack.getStackItem(0).getReturnValueOf().getSignature());
 					if (argumentTypes.length != 0) {
-						Debug.println(argumentTypes[argumentTypes.length-1].getSignature());
-					if ("Ljava/util/concurrent/ThreadFactory;".equals(argumentTypes[argumentTypes.length-1].getSignature())) {
-						AnnotationPriority ap = this.hangingFieldCandidates.get(f);
-						Debug.println(ap);
-						if (ap != null) {
-							ap.priority = LOW_PRIORITY;
-							this.hangingFieldCandidates.put(f, ap);
+						if ("Ljava/util/concurrent/ThreadFactory;".equals(argumentTypes[argumentTypes.length-1].getSignature())) {
+							AnnotationPriority ap = this.hangingFieldCandidates.get(f);
+							if (ap != null) {
+								ap.priority = LOW_PRIORITY;
+								this.hangingFieldCandidates.put(f, ap);
+							}
 						}
 					}
-					}
-	            }
-
-			}
-			
-			
-			
+				}
+			}		
 		}
 		finally {
 			stack.sawOpcode(this, seen);
 		}
-		
+
 	}
 
 
@@ -263,7 +254,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 		if (!exemptExecutors.containsKey(f)) 
 			return false;
 		int i = exemptExecutors.get(f).intValue();
-		
+
 		return i == -1 || getPC() < i;
 	}
 
@@ -293,7 +284,7 @@ public class HangingExecutors extends BytecodeScanningDetector {
 			}
 		}
 	}
-	
+
 	private static class AnnotationPriority {
 
 		public int priority;
@@ -303,15 +294,15 @@ public class HangingExecutors extends BytecodeScanningDetector {
 			this.annotation = annotation;
 			this.priority = priority;
 		}
-		
-		
+
+
 	}
-	
+
 }
 
 
 class LocalHangingExecutor extends LocalTypeDetector {
-	
+
 	private static final Map<String, Set<String>> watchedClassMethods = new HashMap<String, Set<String>>();
 	private static final Map<String, Integer> syncCtors = new HashMap<String, Integer>();
 	static {
@@ -320,11 +311,11 @@ class LocalHangingExecutor extends LocalTypeDetector {
 		forExecutors.add("newFixedThreadPool");
 		forExecutors.add("newScheduledThreadPool");
 		forExecutors.add("newSingleThreadExecutor");
-		
-		
+
+
 		watchedClassMethods.put("java/util/concurrent/Executors", forExecutors);
-	
-	
+
+
 		syncCtors.put("java/util/concurrent/ThreadPoolExecutor", Integer.valueOf(Constants.MAJOR_1_5));
 		syncCtors.put("java/util/concurrent/ScheduledThreadPoolExecutor", Integer.valueOf(Constants.MAJOR_1_5));
 	}
@@ -354,24 +345,24 @@ class LocalHangingExecutor extends LocalTypeDetector {
 		.addClass(this)
 		.addMethod(this)
 		.addSourceLine(cri.getSourceLineAnnotation()));
-		
-		
+
+
 	}
 	@Override
 	public void visitClassContext(ClassContext classContext) {
 		super.visitClassContext(classContext);
 	}
-	
+
 	@Override
 	public void visitCode(Code obj) {
 		super.visitCode(obj);
 	}
-	
+
 	@Override
 	public void visitMethod(Method obj) {
 		super.visitMethod(obj);
 	}
-	
+
 }
 
 
