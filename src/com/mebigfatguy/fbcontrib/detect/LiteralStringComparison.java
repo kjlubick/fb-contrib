@@ -174,6 +174,8 @@ public class LiteralStringComparison extends BytecodeScanningDetector
 						}
 					}
 				break;
+				default:
+					break;
 			}
 
 		} finally {
@@ -219,7 +221,7 @@ public class LiteralStringComparison extends BytecodeScanningDetector
 		return true;
 	}
 		
-	class LookupDetails {
+	static class LookupDetails {
 		private String stringReference;
 		private BitSet switchTargets;
 		
