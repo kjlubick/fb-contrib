@@ -2956,9 +2956,9 @@
 		<LongDescription>Method {1} needlessly assigns a StringBuilder to itself, as it's mutable</LongDescription>
 		<Details>
 			<![CDATA[
-			<p>This method calls StringBuilder.append and assigns the results to the same StringBuilder as</p>
-			<pre>sb = sb.append("foo")</pre>
-			<p>As StringBuilder is mutable this is not necessary.
+			<p>This method calls StringBuilder.append and assigns the results to the same StringBuilder like:</p>
+			<code>sb = sb.append("foo")</code>
+			<p>StringBuilder is mutable this is not necessary.
 			This is also true of StringBuffer.</p>
 			]]>
 		</Details>
@@ -3144,12 +3144,12 @@
 			and easier to use the String.split method.</p>
 			<p>PLEASE NOTE: String.split will return an array of 1 element when passed the
 			empty string, as opposed to using StringTokenizer which returns false on the first
-			hasMoreElements/hasMoreTokens call. So you may need to use</p>
-			<pre>
-				if (s.length() > 0)
-					return s.split(";");
-				return new String[0];
-			</pre>
+			hasMoreElements/hasMoreTokens call. So you may need to use:</p>
+			<code>
+				if (s.length() > 0) <br/>
+				&nbsp;&nbsp;&nbsp;&nbsp;return s.split(";");<br/>
+				return new String[0];<br/>
+			</code>
 			]]>
 		</Details>
 	</BugPattern>
