@@ -2794,18 +2794,36 @@
 	</BugPattern>
 
 	<BugPattern type="SPP_SUSPECT_STRING_TEST">
-		<ShortDescription>Method treats null and normal strings differently than empty strings</ShortDescription>
-		<LongDescription>Method {1} treats null and normal strings differently than empty strings</LongDescription>
+		<ShortDescription>Method possibly mixes up normal strings and empty strings in branching logic</ShortDescription>
+		<LongDescription>Method {1} treats null and normal strings the same, when it should probably 
+		treat null and empty strings the same</LongDescription>
 		<Details>
 			<![CDATA[
 			<p>This method tests a string, and groups null values with real strings, leaving empty strings as another
-			case. This might be perfectly valid, but normally, null strings and empty strings are logically handled the same way,
+			case. That is, FindBugs has detected a structure like: <br/>
+			<code>
+			String a = null, b = "", c = "someString"; <br/>
+			...<br/>
+			String testStr = ...;  //one of a, b or c<br/>
+			if (<b>FLAWED_TEST_LOGIC</b>) { <br/>
+			// Strings a and c fall into this branch... which is not typical.  <br/>
+			} else { <br/>
+			// String b falls into this branch. <br/>
+			} <br/>
+			</code>
+			
+			This might be perfectly valid, but normally, null strings and empty strings are logically handled the same way,
 			and so this test may be flawed.</p>
-			<p>Pattern found is one of the following
-			<pre>if ((s == null) || (s.length() > 0))</pre> -- did you mean ((s == null) || (s.length() == 0))?
-			<pre>if ((s == null) || (s.length() != 0))</pre> -- did you mean ((s == null) || (s.length() == 0))?
-			<pre>if ((s != null) && (s.length() == 0))</pre> -- did you mean ((s != null) && (s.length() > 0))?
-			or perhaps ((s == null) || (s.length() == 0))?
+			<p>Pattern found is one of the following:
+			<ul>
+				<li><code>if ((s == null) || (s.length() > 0))</code> --- did you mean 
+				<code>((s == null) || (s.length() == 0))</code>?</li>
+				<li><code>if ((s == null) || (s.length() != 0))</code> -- did you mean 
+				<code>((s == null) || (s.length() == 0))</code>? </li>
+				<li><code>if ((s != null) && (s.length() == 0))</code> -- did you mean 
+				<code>((s != null) && (s.length() > 0))</code> or perhaps 
+				<code>((s == null) || (s.length() == 0))</code>? </li>
+			</ul>
 			</p>
 			]]>
 		</Details>
@@ -4580,3 +4598,4 @@
 	<BugCode abbrev="HCP">HttpClient Problems</BugCode>
 	<BugCode abbrev="CTU">Conflicting Time Units</BugCode>
 </MessageCollection>
+
