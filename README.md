@@ -23,3 +23,5 @@ Contributors
 * Philipp Wiesemann
 * **Kevin Lubick**
 
+THe master branch is the main branch of development currently targeting the new FindBugs3 platform.
+
