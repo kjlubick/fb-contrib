@@ -66,7 +66,7 @@ public class NonProductiveMethodCall extends BytecodeScanningDetector {
      * implements the visitor to set and clear the stack
      */
     @Override
-	public void visitClassContext(ClassContext classContext) {
+    public void visitClassContext(ClassContext classContext) {
         try {
             stack = new OpcodeStack();
             super.visitClassContext(classContext);
@@ -81,7 +81,7 @@ public class NonProductiveMethodCall extends BytecodeScanningDetector {
      * @param obj the context object of the currently parsed code block
      */
     @Override
-	public void visitCode(Code obj) {
+    public void visitCode(Code obj) {
         stack.resetForMethodEntry(this);
         super.visitCode(obj);
     }
@@ -93,7 +93,7 @@ public class NonProductiveMethodCall extends BytecodeScanningDetector {
      * @param seen the opcode of the currently parsed instruction
      */
     @Override
-	public void sawOpcode(int seen) {
+    public void sawOpcode(int seen) {
         String methodInfo = null;
         try {
             stack.precomputation(this);

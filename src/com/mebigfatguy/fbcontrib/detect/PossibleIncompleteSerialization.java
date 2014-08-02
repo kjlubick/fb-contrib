@@ -127,6 +127,7 @@ public class PossibleIncompleteSerialization implements Detector
 		}
 		return false;
 	}
+	
 	@Override
 	public void report() {
 	}

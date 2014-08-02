@@ -60,7 +60,6 @@ public class NonFunctionalField extends PreorderVisitor implements Detector {
 	 * that are both final and transient
 	 * @param classContext the context object of the currently parsed class
 	 */
-
 	@Override
 	public void visitClassContext(ClassContext classContext) {
 		try {

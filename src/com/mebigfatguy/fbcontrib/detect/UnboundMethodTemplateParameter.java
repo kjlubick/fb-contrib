@@ -56,7 +56,7 @@ public class UnboundMethodTemplateParameter extends PreorderVisitor implements D
      * @param classContext the context object of the currently parsed class
      */
     @Override
-	public void visitClassContext(ClassContext classContext) {
+    public void visitClassContext(ClassContext classContext) {
         JavaClass cls = classContext.getJavaClass();
         cls.accept(this);
     }
@@ -90,7 +90,7 @@ public class UnboundMethodTemplateParameter extends PreorderVisitor implements D
     }
 
     @Override
-	public void report() {
+    public void report() {
     }
 
     /**

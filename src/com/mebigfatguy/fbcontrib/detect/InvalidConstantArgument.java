@@ -90,7 +90,7 @@ public class InvalidConstantArgument extends BytecodeScanningDetector {
     }
     
     @Override
-	public void sawOpcode(int seen) {
+    public void sawOpcode(int seen) {
         try {
             switch (seen) {
             case INVOKESPECIAL:

@@ -57,7 +57,7 @@ public class ConfusingAutoboxedOverloading  extends PreorderVisitor implements D
 		primitiveSigs.add("D");
 		primitiveSigs.add("F");
 	}
-	private BugReporter bugReporter;
+	private final BugReporter bugReporter;
 	
 	/**
      * constructs a CAO detector given the reporter to report bugs on
@@ -108,7 +108,7 @@ public class ConfusingAutoboxedOverloading  extends PreorderVisitor implements D
 	 * 
 	 * @return if one signature is a Character and the other a primitive
 	 */
-	private boolean confusingSignatures(String sig1, String sig2) {
+	private static boolean confusingSignatures(String sig1, String sig2) {
 		if (sig1.equals(sig2))
 			return false;
 		
@@ -120,15 +120,15 @@ public class ConfusingAutoboxedOverloading  extends PreorderVisitor implements D
 		
 		boolean foundParmDiff = false;
 		for (int i = 0; i < type1.length; i++) {
-			Type t1 = type1[i];
-			Type t2 = type2[i];
+			String typeOneSig = type1[i].getSignature();
+			String typeTwoSig = type2[i].getSignature();
 			
-			if (!t1.getSignature().equals(t2.getSignature())) {
-				if ("Ljava/lang/Character;".equals(t1.getSignature())) {
-					if (!primitiveSigs.contains(t2.getSignature()))
+			if (!typeOneSig.equals(typeTwoSig)) {
+				if ("Ljava/lang/Character;".equals(typeOneSig)) {
+					if (!primitiveSigs.contains(typeTwoSig))
 						return false;
-				} else if ("Ljava/lang/Character;".equals(t2.getSignature())) {
-					if (!primitiveSigs.contains(t1.getSignature()))
+				} else if ("Ljava/lang/Character;".equals(typeTwoSig)) {
+					if (!primitiveSigs.contains(typeOneSig))
 						return false;
 				} else 
 					return false;
@@ -178,13 +178,11 @@ public class ConfusingAutoboxedOverloading  extends PreorderVisitor implements D
 	 * 
 	 * @return whether a method signature has either a Character or primitive
 	 */
-	private boolean isPossiblyConfusingSignature(String sig) {
+	private static boolean isPossiblyConfusingSignature(String sig) {
 		Type[] types = Type.getArgumentTypes(sig);
 		for (Type t : types) {
 			sig = t.getSignature();
-			if (primitiveSigs.contains(sig))
-				return true;
-			if ("Ljava/lang/Character;".equals(sig))
+			if (primitiveSigs.contains(sig) || "Ljava/lang/Character;".equals(sig))
 				return true;
 		}
 		return false;

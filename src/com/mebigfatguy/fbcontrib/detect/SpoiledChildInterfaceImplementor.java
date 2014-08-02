@@ -66,7 +66,7 @@ public class SpoiledChildInterfaceImplementor implements Detector {
 			JavaClass[] infs = cls.getInterfaces();
 			if (infs.length > 0) {
 				Set<String> clsMethods = buildMethodSet(cls);
-				for (JavaClass inf : cls.getInterfaces()) {
+				for (JavaClass inf : infs) {
 					Set<String> infMethods = buildMethodSet(inf);
 					if (infMethods.size() > 0) {
 						infMethods.removeAll(clsMethods);
@@ -110,7 +110,7 @@ public class SpoiledChildInterfaceImplementor implements Detector {
 	 * @param cls the class to build the method set from
 	 * @return a set of method names/signatures
 	 */
-	private Set<String> buildMethodSet(JavaClass cls) {
+	private static Set<String> buildMethodSet(JavaClass cls) {
 		Set<String> methods = new HashSet<String>();
 
 		for (Method m : cls.getMethods()) {

@@ -58,7 +58,7 @@ public class CollectionNamingConfusion extends PreorderVisitor implements Detect
     }
     
     @Override
-	public void visitClassContext(ClassContext classContext) {
+    public void visitClassContext(ClassContext classContext) {
         if (MAP_CLASS != null) {
             classContext.getJavaClass().accept(this);
         }
@@ -114,6 +114,6 @@ public class CollectionNamingConfusion extends PreorderVisitor implements Detect
     }
 
     @Override
-	public void report() {
+    public void report() {
     }
 }
