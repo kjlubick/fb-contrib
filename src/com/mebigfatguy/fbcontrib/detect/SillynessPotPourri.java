@@ -330,7 +330,9 @@ public class SillynessPotPourri extends BytecodeScanningDetector
 				bugReporter.reportBug(new BugInstance(this, "SPP_USE_ISNAN", NORMAL_PRIORITY)
 				.addClass(this)
 				.addMethod(this)
-				.addSourceLine(this));
+				.addSourceLine(this)
+				.addString("float")
+				.addString("Float"));
 			}
 		}
 	}
@@ -346,7 +348,9 @@ public class SillynessPotPourri extends BytecodeScanningDetector
 				bugReporter.reportBug(new BugInstance(this, "SPP_USE_ISNAN", NORMAL_PRIORITY)
 				.addClass(this)
 				.addMethod(this)
-				.addSourceLine(this));
+				.addSourceLine(this)
+				.addString("double")
+				.addString("Double"));
 			}
 		}
 	}
