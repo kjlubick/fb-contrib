@@ -27,6 +27,7 @@ import org.apache.bcel.classfile.Code;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.Type;
 
+import com.mebigfatguy.fbcontrib.utils.BugType;
 import com.mebigfatguy.fbcontrib.utils.RegisterUtils;
 
 import edu.umd.cs.findbugs.BugInstance;
@@ -82,7 +83,7 @@ public class BloatedSynchronizedBlock extends BytecodeScanningDetector
 	 * @param method the context object of the current method
 	 * @return if the class uses synchronization
 	 */
-	public boolean prescreen(Method method) {
+	private boolean prescreen(Method method) {
 		BitSet bytecodeSet = getClassContext().getBytecodeSet(method);
 		return (bytecodeSet != null) && (bytecodeSet.get(Constants.MONITORENTER));
 	}
@@ -188,7 +189,7 @@ public class BloatedSynchronizedBlock extends BytecodeScanningDetector
 							}
 						}
 						if ((pc - syncPC) > minSafeCodeLength) {
-							bugReporter.reportBug(new BugInstance(this, "BSB_BLOATED_SYNCHRONIZED_BLOCK", NORMAL_PRIORITY)
+							bugReporter.reportBug(new BugInstance(this, BugType.BSB_BLOATED_SYNCHRONIZED_BLOCK.name(), NORMAL_PRIORITY)
 											.addClass(this)
 											.addMethod(this)
 											.addSourceLineRange(this, syncPC + 1, pc));

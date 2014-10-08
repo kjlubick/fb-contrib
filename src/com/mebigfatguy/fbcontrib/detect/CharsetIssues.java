@@ -29,6 +29,7 @@ import org.apache.bcel.Constants;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.Type;
 
+import com.mebigfatguy.fbcontrib.utils.BugType;
 import com.mebigfatguy.fbcontrib.utils.Values;
 
 import edu.umd.cs.findbugs.BugInstance;
@@ -56,7 +57,7 @@ public class CharsetIssues extends BytecodeScanningDetector {
 	 * Not coincidentally, the argument that needs to be replaced is the [(# of arguments) - offset]th one
 	 */
 	static {
-		Map<String, Integer> replaceable = new HashMap<String, Integer>();
+		Map<String, Integer> replaceable = new HashMap<String, Integer>(8);
 		replaceable.put("java/io/InputStreamReader.<init>(Ljava/io/InputStream;Ljava/lang/String;)V", Values.ZERO);
 		replaceable.put("java/io/OutputStreamWriter.<init>(Ljava/io/OutputStream;Ljava/lang/String;)V", Values.ZERO);
 		replaceable.put("java/lang/String.<init>([BLjava/lang/String;)V", Values.ZERO);
@@ -66,7 +67,7 @@ public class CharsetIssues extends BytecodeScanningDetector {
 		
 		REPLACEABLE_ENCODING_METHODS = Collections.unmodifiableMap(replaceable);
 		
-		Map<String, Integer> unreplaceable = new HashMap<String, Integer>();
+		Map<String, Integer> unreplaceable = new HashMap<String, Integer>(32);
 		unreplaceable.put("java/net/URLEncoder.encode(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", Values.ZERO);
 		unreplaceable.put("java/net/URLDecoder.decode(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", Values.ZERO);
 		unreplaceable.put("java/io/ByteArrayOutputStream.toString(Ljava/lang/String;)V", Values.ZERO);
@@ -167,7 +168,7 @@ public class CharsetIssues extends BytecodeScanningDetector {
 							if (STANDARD_JDK7_ENCODINGS.contains(encoding) && (classVersion >= Constants.MAJOR_1_7)) {
 								// the counts put in the Pair are indexed from the beginning of
 								String changedMethodSig = replaceNthArgWithCharsetString(methodSig, offset);
-								bugReporter.reportBug(new BugInstance(this, "CSI_CHAR_SET_ISSUES_USE_STANDARD_CHARSET", NORMAL_PRIORITY)
+								bugReporter.reportBug(new BugInstance(this, BugType.CSI_CHAR_SET_ISSUES_USE_STANDARD_CHARSET.name(), NORMAL_PRIORITY)
 											.addClass(this)
 											.addMethod(this)
 											.addSourceLine(this)
@@ -183,7 +184,7 @@ public class CharsetIssues extends BytecodeScanningDetector {
 								OpcodeStack.Item item = stack.getStackItem(offset);
 								encoding = (String) item.getConstant();
 								if (STANDARD_JDK7_ENCODINGS.contains(encoding) && (classVersion >= Constants.MAJOR_1_7)) {
-									bugReporter.reportBug(new BugInstance(this, "CSI_CHAR_SET_ISSUES_USE_STANDARD_CHARSET_NAME", NORMAL_PRIORITY)
+									bugReporter.reportBug(new BugInstance(this, BugType.CSI_CHAR_SET_ISSUES_USE_STANDARD_CHARSET_NAME.name(), NORMAL_PRIORITY)
 												.addClass(this)
 												.addMethod(this)
 												.addSourceLine(this)
@@ -197,7 +198,7 @@ public class CharsetIssues extends BytecodeScanningDetector {
 						try {
 							Charset.forName(encoding);
 						} catch (IllegalArgumentException e) {  //encompasses both IllegalCharsetNameException and UnsupportedCharsetException
-							bugReporter.reportBug(new BugInstance(this, "CSI_CHAR_SET_ISSUES_UNKNOWN_ENCODING", NORMAL_PRIORITY)
+							bugReporter.reportBug(new BugInstance(this, BugType.CSI_CHAR_SET_ISSUES_UNKNOWN_ENCODING.name(), NORMAL_PRIORITY)
 										.addClass(this)
 										.addMethod(this)
 										.addSourceLine(this)

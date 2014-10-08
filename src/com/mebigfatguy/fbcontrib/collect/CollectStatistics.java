@@ -18,18 +18,44 @@
  */
 package com.mebigfatguy.fbcontrib.collect;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import org.apache.bcel.Constants;
+import org.apache.bcel.classfile.AnnotationEntry;
 import org.apache.bcel.classfile.Code;
+import org.apache.bcel.classfile.JavaClass;
+import org.apache.bcel.classfile.Method;
 
 import edu.umd.cs.findbugs.BugReporter;
 import edu.umd.cs.findbugs.BytecodeScanningDetector;
 import edu.umd.cs.findbugs.NonReportingDetector;
+import edu.umd.cs.findbugs.ba.ClassContext;
 
 public class CollectStatistics extends BytecodeScanningDetector implements NonReportingDetector
 {
+	private static Set<String> COMMON_METHOD_SIGS = new HashSet<String>();
+	static {
+		COMMON_METHOD_SIGS.add("\\<init\\>\\(\\)V");
+		COMMON_METHOD_SIGS.add("toString\\(\\)Ljava/lang/String;");
+		COMMON_METHOD_SIGS.add("hashCode\\(\\)I");
+		COMMON_METHOD_SIGS.add("clone\\(\\).*");
+		COMMON_METHOD_SIGS.add("values\\(\\).*");
+		COMMON_METHOD_SIGS.add("main\\(\\[Ljava/lang/String;\\)V");
+	}
 	private int numMethodCalls;
+	private boolean classHasAnnotation;
 
 	public CollectStatistics(BugReporter bugReporter) {
 		Statistics.getStatistics().clear();
+	}
+
+    @Override
+    public void visitClassContext(ClassContext classContext) {
+    	JavaClass cls = classContext.getJavaClass();
+    	AnnotationEntry[] annotations = cls.getAnnotationEntries();
+    	classHasAnnotation = (annotations != null) && (annotations.length > 0);
+    	super.visitClassContext(classContext);
 	}
 
 	@Override
@@ -40,7 +66,23 @@ public class CollectStatistics extends BytecodeScanningDetector implements NonRe
 		byte[] code = obj.getCode();
 		if (code != null) {
 			super.visitCode(obj);
-			Statistics.getStatistics().addMethodStatistics(getClassName(), getMethodName(), getMethodSig(), obj.getLength(), numMethodCalls);
+			String clsName = getClassName();
+			int accessFlags = getMethod().getAccessFlags();
+			MethodInfo mi = Statistics.getStatistics().addMethodStatistics(clsName, getMethodName(), getMethodSig(), accessFlags, obj.getLength(), numMethodCalls);
+			if (clsName.contains("$") || ((accessFlags & (ACC_ABSTRACT|ACC_INTERFACE|ACC_ANNOTATION)) != 0)) {
+				mi.addCallingAccess(Constants.ACC_PUBLIC);
+			} else if ((accessFlags & Constants.ACC_PRIVATE) == 0) {
+				if (isAssociationedWithAnnotations(getMethod())) {
+					mi.addCallingAccess(Constants.ACC_PUBLIC);
+				} else {
+					String methodSig = getMethodName() + getMethodSig();
+					for (String sig : COMMON_METHOD_SIGS) {
+						if (methodSig.matches(sig)) {
+							mi.addCallingAccess(Constants.ACC_PUBLIC);
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -56,5 +98,14 @@ public class CollectStatistics extends BytecodeScanningDetector implements NonRe
 			default:
 				break;
 		}
+	}
+
+	private boolean isAssociationedWithAnnotations(Method m) {
+		if (classHasAnnotation) {
+			return true;
+		}
+
+		AnnotationEntry[] annotations = m.getAnnotationEntries();
+    	return (annotations != null) && (annotations.length > 0);
 	}
 }

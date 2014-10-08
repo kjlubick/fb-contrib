@@ -30,6 +30,8 @@ import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.Type;
 
+import com.mebigfatguy.fbcontrib.utils.BugType;
+
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
 import edu.umd.cs.findbugs.BytecodeScanningDetector;
@@ -71,7 +73,7 @@ public class StaticMethodInstanceInvocation extends BytecodeScanningDetector {
 	 * @param method the context object of the current method
 	 * @return if the class uses synchronization
 	 */
-	public boolean prescreen(Method method) {
+	private boolean prescreen(Method method) {
 		BitSet bytecodeSet = getClassContext().getBytecodeSet(method);
 		return (bytecodeSet != null) && (bytecodeSet.get(Constants.INVOKESTATIC));
 	}
@@ -124,7 +126,7 @@ public class StaticMethodInstanceInvocation extends BytecodeScanningDetector {
     						        lineNumber = lineNumberTable.getSourceLine(getPC());
     						    }
     						    if (pInfo.popLineNum == lineNumber) {
-        							bugReporter.reportBug(new BugInstance(this, "SMII_STATIC_METHOD_INSTANCE_INVOCATION", NORMAL_PRIORITY)
+        							bugReporter.reportBug(new BugInstance(this, BugType.SMII_STATIC_METHOD_INSTANCE_INVOCATION.name(), NORMAL_PRIORITY)
         								.addClass(this)
         								.addMethod(this)
         								.addSourceLine(this));

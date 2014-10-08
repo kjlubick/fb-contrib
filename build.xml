@@ -1,6 +1,6 @@
 <!-- fb-contrib Ant build script. Dave Brosius -->
 
-<project name="fb-contrib" default="info">
+<project name="fb-contrib" default="default">
 
     <property file="user.properties" />
     <property file="build.properties" />
@@ -36,6 +36,12 @@
 		<delete dir="${basedir}/plugin" />
 	</target>
 	
+	<target name="infra_jars" description="pull jars needed to build fb-contrib to ${user.dir}/.ant/lib">
+		<mkdir dir="${user.home}/.ant/lib" />
+		<get src="http://repo1.maven.org/maven2/com/mebigfatguy/yank/yank/1.2.0/yank-1.2.0.jar" dest="${user.home}/.ant/lib"/>
+		<get src="https://bitbucket.org/klubick/bugrankcheckstyle/downloads/bug-rank-check-style-1.0.0.jar" dest="${user.home}/.ant/lib"/>
+	</target>
+	
 	<target name="yank" xmlns:yank="antlib:com.mebigfatguy.yank" unless="no.yank">
         <mkdir dir="${lib.dir}" />
         <yank:yank yankFile="${basedir}/yank.xls" destination="${lib.dir}" proxyServer="${proxy.server}" source="true" separateClassifierTypes="true">
@@ -47,18 +53,21 @@
     <target name="info">
         <echo message="fb-contrib - a findbugs plugin"/>
         <echo message=""/>
-        <echo message="    this project uses yank (https://github.com/mebigfatguy/yank) for dependency management"/>
+        <echo message="    This project uses yank (https://github.com/mebigfatguy/yank) for dependency management"/>
         <echo message="    download yank.jar and place in ~/.ant/lib directory"/>
         <echo message="    http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.mebigfatguy.yank%22"/>
         
     	<echo message="===="/>
     	<echo message="    Additionally, this project uses bug-rank-check-style to validate etc/bugrank.txt"/>
-    	<echo message="    bug-rank-check-style-1.0.0.jar can be downloaded under https://github.com/kjlubick/fb-contrib/releases"/>
+    	<echo message="    bug-rank-check-style-1.0.0.jar can be downloaded at https://bitbucket.org/klubick/bugrankcheckstyle/downloads"/>
     	<echo message="    and put in ~/.ant/lib alongside yank"/>
-    	<antcall target="install"/>
+    	<echo message=""/>
+    	<echo message="    This task can be automated by running ant infra_jars"/>
     </target>
+	
+	<target name="default" depends="info, install"/>
 
-	<target name="-init" depends="yank" description="prepares repository for a build">
+	<target name="-init" depends="yank">
 		<mkdir dir="${lib.dir}" />
 		<mkdir dir="${classes.dir}" />
 		<mkdir dir="${javadoc.dir}" />

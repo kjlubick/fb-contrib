@@ -28,6 +28,8 @@ import org.apache.bcel.classfile.Code;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 
+import com.mebigfatguy.fbcontrib.utils.BugType;
+
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
 import edu.umd.cs.findbugs.BytecodeScanningDetector;
@@ -90,7 +92,7 @@ public class NonSymmetricEquals extends BytecodeScanningDetector {
      * @param method the context object of the current method
      * @return if the class does checkcast instructions
      */
-    public boolean prescreen(Method method) {
+    private boolean prescreen(Method method) {
         BitSet bytecodeSet = getClassContext().getBytecodeSet(method);
         return (bytecodeSet != null) && (bytecodeSet.get(Constants.CHECKCAST));
     }
@@ -117,7 +119,7 @@ public class NonSymmetricEquals extends BytecodeScanningDetector {
     						boolean inheritance = thisJavaClass.instanceOf(equalsJavaClass) 
     						                    || equalsJavaClass.instanceOf(thisJavaClass);
     						
-	    					BugInstance bug = new BugInstance(this, "NSE_NON_SYMMETRIC_EQUALS", inheritance ? LOW_PRIORITY:NORMAL_PRIORITY)
+	    					BugInstance bug = new BugInstance(this, BugType.NSE_NON_SYMMETRIC_EQUALS.name(), inheritance ? LOW_PRIORITY:NORMAL_PRIORITY)
 	    					            .addClass(this)
 	    					            .addMethod(this)
 	    					            .addSourceLine(this)

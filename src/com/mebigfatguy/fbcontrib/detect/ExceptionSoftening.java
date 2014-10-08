@@ -100,7 +100,8 @@ public class ExceptionSoftening extends BytecodeScanningDetector
 		}
 	}
 		
-	/** overrides the visitor to look for methods that catch exceptions
+	/** overrides the visitor to look for methods that catch checked exceptions
+	 * and rethrow runtime exceptions
 	 * 
 	 * @param obj the context object of the currently parsed code block
 	 */
@@ -109,12 +110,14 @@ public class ExceptionSoftening extends BytecodeScanningDetector
 		try {
 			Method method = getMethod();
 			if (prescreen(method)) {
-				stack.resetForMethodEntry(this);
 				catchHandlerPCs = collectExceptions(obj.getExceptionTable());
-				catchInfos = new ArrayList<CatchInfo>();
-				lvt = method.getLocalVariableTable();
-				constrainingInfo = null;
-				super.visitCode(obj);
+				if (!catchHandlerPCs.isEmpty()) {
+					stack.resetForMethodEntry(this);
+					catchInfos = new ArrayList<CatchInfo>();
+					lvt = method.getLocalVariableTable();
+					constrainingInfo = null;
+					super.visitCode(obj);
+				}
 			}
 		} finally {
 			catchInfos = null;
@@ -291,7 +294,7 @@ public class ExceptionSoftening extends BytecodeScanningDetector
 	 * @param pc the current pc
 	 * @return an set of catch exception types that the pc is currently in
 	 */
-	public Set<String> findPossibleCatchSignatures(List<CatchInfo> infos, int pc) {
+	private static Set<String> findPossibleCatchSignatures(List<CatchInfo> infos, int pc) {
 		Set<String> catchTypes = new HashSet<String>(6);
 		ListIterator<CatchInfo> it = infos.listIterator(infos.size());
 		while (it.hasPrevious()) {
@@ -311,7 +314,7 @@ public class ExceptionSoftening extends BytecodeScanningDetector
 	 * @param m the method to check
 	 * @return a map containing the class name to a set of exceptions that constrain this method
 	 */
-	public Map<String, Set<String>> getConstrainingInfo(JavaClass cls, Method m) throws ClassNotFoundException {
+	private Map<String, Set<String>> getConstrainingInfo(JavaClass cls, Method m) throws ClassNotFoundException {
 		String methodName = m.getName();
 		String methodSig = m.getSignature();
 

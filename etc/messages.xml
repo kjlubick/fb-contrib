@@ -1475,6 +1475,32 @@
     		]]>
     	</Details>
     </Detector>
+    
+    <Detector class="com.mebigfatguy.fbcontrib.detect.ContainsBasedConditional">
+    	<Details>
+    		<![CDATA[
+    		<p>looks for complex if expressions made up of multiple conditions joined by OR, where the same
+    		local variable is compared to a static value. When the number of conditions grow it is much cleaner
+    		to build a static set of the possible values, and use the contains method on that set. This will
+    		shorten the code, and make it more self documenting.</p>
+    		<p>It is a fast detector</p>
+    		]]>
+    	</Details>
+    </Detector>
+    
+    <Detector class="com.mebigfatguy.fbcontrib.detect.OverlyPermissiveMethod">
+    	<Details>
+    		<![CDATA[
+    		<p>looks for methods that are declared more permissively than the code is using. For instance, declaring
+    		a method public, when it could just be declared private. Having methods have more permissive access than they 
+    		need to have limits your ability to make observations about these methods, like parameter usage, 
+    		refactorability, and derivability. This detector will not report on methods that are never called in 
+    		the case this method is an API like method intended to be called by client code. If this method is 
+    		also called through reflection, this detector may erroneous report it.</p>
+    		<p>It is a moderately fast detector</p>
+    		]]>
+    	</Details>
+    </Detector>
 
 	<Detector class="com.mebigfatguy.fbcontrib.debug.OCSDebugger">
 		<Details></Details>
@@ -4598,6 +4624,38 @@
     		]]>
     	</Details>
     </BugPattern>
+    
+    <BugPattern type="CBC_CONTAINS_BASED_CONDITIONAL">
+    	<ShortDescription>This method uses an excessively complex conditional that can be replaced with Set.contains</ShortDescription>
+    	<LongDescription>This method {1} uses an excessively complex conditional that can be replaced with Set.contains</LongDescription>
+    	<Details>
+    		<![CDATA[
+    		<p>This method uses an overly complex if expression made up of multiple conditions joined by OR, where the same
+    		local variable is compared to a static value. When the number of conditions grow it is much cleaner
+    		to build a static set of the possible values, and use the contains method on that set. This will
+    		shorten the code, and make it more self documenting.</p>
+    		]]>
+    	</Details>
+    </BugPattern>
+    
+    <BugPattern type="OPM_OVERLY_PERMISSIVE_METHOD">
+    	<ShortDescription>This method is declared more permissively than is used in the code base</ShortDescription>
+    	<LongDescription>This method {1} is declared more permissively than is used in the code base</LongDescription>
+    	<Details>
+    		<![CDATA[
+    		<p>This method is declared more permissively than the code is using. Having this method be more
+    		permissive than is needed limits your ability to make observations about this methods, like
+    		parameter usage, refactorability, and derivability. It is possible that this detector will report 
+    		erroneously if:
+    		<ul>
+    			<li>The method is called from code not being scanned, such as unit tests</li>
+    			<li>The method is an api method, expected to be used by unknown client code</li>
+    			<li>The method is called through reflection
+    		</ul>	
+    		</p>
+    		]]>
+    	</Details>
+    </BugPattern>
 
 	<!-- BugCode -->
 
@@ -4723,4 +4781,6 @@
 	<BugCode abbrev="HCP">HttpClient Problems</BugCode>
 	<BugCode abbrev="CTU">Conflicting Time Units</BugCode>
 	<BugCode abbrev="CSI">Charset Issues</BugCode>
+	<BugCode abbrev="CBC">Contains Based Conditional</BugCode>
+	<BugCode abbrev="OPM">Overly Permissive Method</BugCode>
 </MessageCollection>

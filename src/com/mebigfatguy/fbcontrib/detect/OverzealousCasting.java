@@ -26,6 +26,7 @@ import org.apache.bcel.classfile.LocalVariable;
 import org.apache.bcel.classfile.LocalVariableTable;
 import org.apache.bcel.classfile.Method;
 
+import com.mebigfatguy.fbcontrib.utils.BugType;
 import com.mebigfatguy.fbcontrib.utils.RegisterUtils;
 
 import edu.umd.cs.findbugs.BugInstance;
@@ -75,7 +76,7 @@ public class OverzealousCasting
      * @param method the context object of the current method
      * @return if the class does checkcast instructions
      */
-    public boolean prescreen(Method method) {
+    private boolean prescreen(Method method) {
         BitSet bytecodeSet = getClassContext().getBytecodeSet(method);
         return (bytecodeSet != null) && (bytecodeSet.get(Constants.CHECKCAST));
     }
@@ -112,7 +113,7 @@ public class OverzealousCasting
                             sig = sig.substring(1, sig.length() - 1);
                         }
                         if (!sig.equals(castClass)) {
-                            bugReporter.reportBug(new BugInstance(this, "OC_OVERZEALOUS_CASTING", NORMAL_PRIORITY)
+                            bugReporter.reportBug(new BugInstance(this, BugType.OC_OVERZEALOUS_CASTING.name(), NORMAL_PRIORITY)
                                        .addClass(this)
                                        .addMethod(this)
                                        .addSourceLine(this));
@@ -125,7 +126,7 @@ public class OverzealousCasting
                         sig = sig.substring(1, sig.length() - 1);
                     }
                     if (!sig.equals(castClass)) {
-                        bugReporter.reportBug(new BugInstance(this, "OC_OVERZEALOUS_CASTING", NORMAL_PRIORITY)
+                        bugReporter.reportBug(new BugInstance(this, BugType.OC_OVERZEALOUS_CASTING.name(), NORMAL_PRIORITY)
                                    .addClass(this)
                                    .addMethod(this)
                                    .addSourceLine(this));
