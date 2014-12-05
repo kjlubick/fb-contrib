@@ -35,6 +35,7 @@ import org.apache.bcel.generic.Type;
 
 import com.mebigfatguy.fbcontrib.utils.RegisterUtils;
 import com.mebigfatguy.fbcontrib.utils.TernaryPatcher;
+import com.mebigfatguy.fbcontrib.utils.ToString;
 import com.mebigfatguy.fbcontrib.utils.Values;
 
 import edu.umd.cs.findbugs.BytecodeScanningDetector;
@@ -55,10 +56,9 @@ abstract class LocalTypeDetector extends BytecodeScanningDetector {
 	 * e.g. StringBuffer was the only way to efficiently concatenate a string until
 	 * the faster, non-thread safe StringBuilder was introduced in 1.5.  Thus, in code
 	 * that targets before 1.5, FindBugs should not report a LocalSynchronizedCollection bug.
-	 * Therefore, the entry <"java/lang/StringBuffer", Constants.MAJOR_1_5> is in the returned map.
+	 * Therefore, the entry &lt;"java/lang/StringBuffer", Constants.MAJOR_1_5&gt; is in the returned map.
 	 * 
-	 * 
-	 * 
+	 * @return the map of watched constructors
 	 */
 	protected abstract Map<String, Integer> getWatchedConstructors();
 
@@ -71,7 +71,7 @@ abstract class LocalTypeDetector extends BytecodeScanningDetector {
 
 	/**
 	 * Given this RegisterInfo, report an appropriate bug.
-	 * @param cri
+	 * @param cri the register info
 	 */
 	protected abstract void reportBug(RegisterInfo cri);
 
@@ -240,7 +240,7 @@ abstract class LocalTypeDetector extends BytecodeScanningDetector {
 
 	protected Integer checkConstructors() {
 		Integer tosIsSyncColReg = null;
-		if ("<init>".equals(getNameConstantOperand())) {
+		if (Values.CONSTRUCTOR.equals(getNameConstantOperand())) {
 			Integer minVersion = getWatchedConstructors().get(getClassConstantOperand());
 			if ((minVersion != null) && (classVersion >= minVersion.intValue())) {
 				tosIsSyncColReg = Values.NEGATIVE_ONE;
@@ -309,8 +309,7 @@ abstract class LocalTypeDetector extends BytecodeScanningDetector {
 
 		@Override
 		public String toString() {
-			return "RegisterInfo [slAnnotation=" + slAnnotation + ", priority=" + priority + ", endPCRange="
-					+ endPCRange + "]";
+			return ToString.build(this);
 		}
 	}
 

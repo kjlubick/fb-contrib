@@ -32,6 +32,7 @@ import org.apache.bcel.generic.Type;
 
 import com.mebigfatguy.fbcontrib.utils.BugType;
 import com.mebigfatguy.fbcontrib.utils.TernaryPatcher;
+import com.mebigfatguy.fbcontrib.utils.Values;
 
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
@@ -40,6 +41,11 @@ import edu.umd.cs.findbugs.OpcodeStack;
 import edu.umd.cs.findbugs.OpcodeStack.CustomUserValue;
 import edu.umd.cs.findbugs.ba.ClassContext;
 
+/**
+ * looks for exceptions that are thrown with static strings as messages. Using static strings
+ * doesn't differentiate one use of this method versus another, and so it may be difficult
+ * to determine how this exception occurred without showing context.
+ */
 @CustomUserValue
 public class WeakExceptionMessaging extends BytecodeScanningDetector {
 
@@ -142,7 +148,7 @@ public class WeakExceptionMessaging extends BytecodeScanningDetector {
 				if (getConstantRefOperand() instanceof ConstantString)
 					sawConstant = true;
 			} else if (seen == INVOKESPECIAL) {
-				if ("<init>".equals(getNameConstantOperand())) {
+				if (Values.CONSTRUCTOR.equals(getNameConstantOperand())) {
 					String clsName = getClassConstantOperand();
 					if (clsName.indexOf("Exception") >= 0) {
 						JavaClass exCls = Repository.lookupClass(clsName);

@@ -35,6 +35,7 @@ import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.Type;
 
 import com.mebigfatguy.fbcontrib.utils.BugType;
+import com.mebigfatguy.fbcontrib.utils.ToString;
 
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
@@ -52,7 +53,7 @@ public class InvalidConstantArgument extends BytecodeScanningDetector {
     private static final Map<Pattern, ParameterInfo<?>> PATTERNS = new HashMap<Pattern, ParameterInfo<?>>();
     static {
         PATTERNS.put(Pattern.compile("javax/swing/JOptionPane#showMessageDialog\\(Ljava/awt/Component;Ljava/lang/Object;Ljava/lang/String;I\\)V"), 
-                     new ParameterInfo<Integer>(0, false, JOptionPane.ERROR_MESSAGE, JOptionPane.INFORMATION_MESSAGE, JOptionPane.PLAIN_MESSAGE, JOptionPane.WARNING_MESSAGE));
+                new ParameterInfo<Integer>(0, false, JOptionPane.ERROR_MESSAGE, JOptionPane.INFORMATION_MESSAGE, JOptionPane.PLAIN_MESSAGE, JOptionPane.WARNING_MESSAGE));
         PATTERNS.put(Pattern.compile("javax/swing/BorderFactory#createBevelBorder\\(I.*\\)Ljavax/swing/border/Border;"), 
                 new ParameterInfo<Integer>(0, true, BevelBorder.LOWERED, BevelBorder.RAISED));
         PATTERNS.put(Pattern.compile("javax/swing/BorderFactory#createEtchedBorder\\(I.*\\)Ljavax/swing/border/Border;"), 
@@ -175,6 +176,11 @@ public class InvalidConstantArgument extends BytecodeScanningDetector {
 
         public T getTo() {
             return to;
+        }
+        
+        @Override
+        public String toString() {
+            return ToString.build(this);
         }
     }
 }

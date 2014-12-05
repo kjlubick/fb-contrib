@@ -41,6 +41,10 @@ import edu.umd.cs.findbugs.OpcodeStack;
 import edu.umd.cs.findbugs.ba.ClassContext;
 import edu.umd.cs.findbugs.classfile.ClassDescriptor;
 
+/**
+ * looks for methods that are declared more permissively than the code is using. 
+ * For instance, declaring a method public, when it could just be declared private.
+ */
 public class OverlyPermissiveMethod extends BytecodeScanningDetector {
 
 	private static Map<Integer, String> DECLARED_ACCESS = new HashMap<Integer, String>();
@@ -56,6 +60,10 @@ public class OverlyPermissiveMethod extends BytecodeScanningDetector {
 	private String callingPackage;
 	private String callingClass;
 
+	/**
+     * constructs a OPM detector given the reporter to report bugs on
+     * @param bugReporter the sync of bug reports
+	 */
 	public OverlyPermissiveMethod(BugReporter bugReporter) {
 		this.bugReporter = bugReporter;
 	}
@@ -132,6 +140,11 @@ public class OverlyPermissiveMethod extends BytecodeScanningDetector {
 		}
 	}
 
+	/**
+	 * checks to see if an instance method is called on the 'this' object
+	 * @param sig the signature of the method called to find the called-on object
+	 * @return when it is called on this or not
+	 */
 	private boolean isCallingOnThis(String sig) {
 		Type[] argTypes = Type.getArgumentTypes(sig);
 		if (stack.getStackDepth() < argTypes.length) {
@@ -142,6 +155,10 @@ public class OverlyPermissiveMethod extends BytecodeScanningDetector {
 		return item.getRegisterNumber() == 0;
 	}
 
+	/**
+	 * after collecting all method calls, build a report of all methods that have been called,
+	 * but in a way that is less permissive then is defined.
+	 */
 	@Override
 	public void report() {
 		for (Map.Entry<StatisticsKey, MethodInfo> entry : Statistics.getStatistics()) {
@@ -166,7 +183,7 @@ public class OverlyPermissiveMethod extends BytecodeScanningDetector {
 										.addClass(key.getClassName())
 										.addMethod(key.getClassName(), key.getMethodName(), key.getSignature(), (declaredAccess & Constants.ACC_STATIC) != 0);
 
-						String descr = String.format("- Method declared %s but could be declared %s", getDeclaredAccessValue(declaredAccess), getNeededAccessValue(mi));
+						String descr = String.format("- Method declared %s but could be declared %s", getDeclaredAccessValue(declaredAccess), getRequiredAccessValue(mi));
 						bi.addString(descr);
 						
 						bugReporter.reportBug(bi);
@@ -187,6 +204,13 @@ public class OverlyPermissiveMethod extends BytecodeScanningDetector {
 		return false;
 	}
 
+	/**
+	 * looks to see if this method described by key is derived from a superclass or interface
+	 * 
+	 * @param cls the class that the method is defined in
+	 * @param key the information about the method
+	 * @return whether this method derives from something or not
+	 */
 	private boolean isDerived(JavaClass cls, StatisticsKey key) {
 		try {
 			for (JavaClass infCls : cls.getInterfaces()) {
@@ -229,11 +253,11 @@ public class OverlyPermissiveMethod extends BytecodeScanningDetector {
 		}
 	}
 	
-	private String getDeclaredAccessValue(int declaredAccess) {
+	private static String getDeclaredAccessValue(int declaredAccess) {
 		return DECLARED_ACCESS.get(declaredAccess & (Constants.ACC_PRIVATE|Constants.ACC_PROTECTED|Constants.ACC_PUBLIC));
 	}
 	
-	private Object getNeededAccessValue(MethodInfo mi) {
+	private static Object getRequiredAccessValue(MethodInfo mi) {
 		if (mi.wasCalledProtectedly())
 			return "protected";
 		if (mi.wasCalledPackagely())

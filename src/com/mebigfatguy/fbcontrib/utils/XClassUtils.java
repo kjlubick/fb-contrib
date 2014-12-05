@@ -27,8 +27,6 @@ import edu.umd.cs.findbugs.classfile.Global;
 
 /**
  * Utility class for XClass and XMethod classes.
- * 
- * @author Jean-Noel Rouvignac
  */
 public class XClassUtils {
 
@@ -39,7 +37,7 @@ public class XClassUtils {
 	 * @param classDesc
 	 *            the class descriptor for which to find the XClass object
 	 * @return the class
-	 * @throws AssertionError
+	 * @throws AssertionError if the analysis of the class failed
 	 */
 	public XClass getXClass(final ClassDescriptor classDesc) throws AssertionError {
 		try {
@@ -58,7 +56,7 @@ public class XClassUtils {
 	 * @param slashedClassName
 	 *            the class name for which to find the XClass object
 	 * @return the class
-	 * @throws AssertionError
+	 * @throws AssertionError if the analysis of the class failed
 	 */
 	public XClass getXClass(String slashedClassName) {
 		return getXClass(DescriptorFactory

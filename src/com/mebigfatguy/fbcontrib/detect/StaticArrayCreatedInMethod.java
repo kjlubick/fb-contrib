@@ -21,11 +21,11 @@ package com.mebigfatguy.fbcontrib.detect;
 import org.apache.bcel.classfile.Code;
 
 import com.mebigfatguy.fbcontrib.utils.BugType;
+import com.mebigfatguy.fbcontrib.utils.Values;
 
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
 import edu.umd.cs.findbugs.BytecodeScanningDetector;
-import edu.umd.cs.findbugs.ba.ClassContext;
 
 /**
  * looks for creation of arrays where the contents are constants, or static
@@ -46,15 +46,6 @@ public class StaticArrayCreatedInMethod extends BytecodeScanningDetector
 		this.bugReporter = bugReporter;
 	}
 	
-	@Override
-	public void visitClassContext(ClassContext classContext) {
-		try {
-			super.visitClassContext(classContext);
-		} finally {
-			
-		}
-	}
-	
 	/**
 	 * implements the visitor by forwarding calls for methods that are the static initializer
 	 * 
@@ -62,7 +53,7 @@ public class StaticArrayCreatedInMethod extends BytecodeScanningDetector
 	 */
 	@Override
 	public void visitCode(Code obj) {
-		if (!"<clinit>".equals(getMethodName())) {
+		if (!Values.STATIC_INITIALIZER.equals(getMethodName())) {
 			state = State.SEEN_NOTHING;
 			super.visitCode(obj);
 		}

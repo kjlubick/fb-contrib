@@ -30,6 +30,7 @@ import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.Type;
 
 import com.mebigfatguy.fbcontrib.utils.BugType;
+import com.mebigfatguy.fbcontrib.utils.PublicAPI;
 import com.mebigfatguy.fbcontrib.utils.Values;
 
 import edu.umd.cs.findbugs.BugInstance;
@@ -45,8 +46,8 @@ public class CharsetIssues extends BytecodeScanningDetector {
 	
 	private static final String CHARSET_SIG = "Ljava/nio/charset/Charset;";
 	
-	public static final Map<String, Integer> REPLACEABLE_ENCODING_METHODS;
-	public static final Map<String, Integer> UNREPLACEABLE_ENCODING_METHODS;
+	private static final Map<String, Integer> REPLACEABLE_ENCODING_METHODS;
+	private static final Map<String, Integer> UNREPLACEABLE_ENCODING_METHODS;
 	public static final Set<String> STANDARD_JDK7_ENCODINGS;
 	
 	/*
@@ -232,5 +233,15 @@ public class CharsetIssues extends BytecodeScanningDetector {
 		sb.append(sig.substring(sig.lastIndexOf(')'), sig.length()));
 		return sb.toString();
 	}
+	
+	@PublicAPI("Used by fb-contrib-eclipse-quickfixes to determine type of fix to apply")
+	public static Map<String, Integer> getUnreplaceableCharsetEncodings() {
+	    return UNREPLACEABLE_ENCODING_METHODS;
+	}
+	
+	@PublicAPI("Used by fb-contrib-eclipse-quickfixes to determine type of fix to apply")
+	public static Map<String, Integer> getReplaceableCharsetEncodings() {
+        return REPLACEABLE_ENCODING_METHODS;
+    }
 	
 }

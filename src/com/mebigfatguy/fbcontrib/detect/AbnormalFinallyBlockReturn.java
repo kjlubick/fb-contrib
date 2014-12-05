@@ -29,6 +29,7 @@ import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 
 import com.mebigfatguy.fbcontrib.utils.BugType;
+import com.mebigfatguy.fbcontrib.utils.ToString;
 
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
@@ -229,7 +230,7 @@ public class AbnormalFinallyBlockReturn extends BytecodeScanningDetector {
 	/**
 	 * holds the finally block information for a particular method.
 	 */
-	public static class FinallyBlockInfo
+	static class FinallyBlockInfo
 	{
 		public int startPC;
 		public int monitorCount;
@@ -240,10 +241,15 @@ public class AbnormalFinallyBlockReturn extends BytecodeScanningDetector {
          *
          * @param start the start of the try block
          */
-		public FinallyBlockInfo(int start) {
+		FinallyBlockInfo(int start) {
 			startPC = start;
 			monitorCount = 0;
             exReg = -1;
+		}
+		
+		@Override
+		public String toString() {
+			return ToString.build(this);
 		}
 	}
 }

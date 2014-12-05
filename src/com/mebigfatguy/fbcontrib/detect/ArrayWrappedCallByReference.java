@@ -30,6 +30,7 @@ import org.apache.bcel.generic.Type;
 import com.mebigfatguy.fbcontrib.utils.BugType;
 import com.mebigfatguy.fbcontrib.utils.RegisterUtils;
 import com.mebigfatguy.fbcontrib.utils.TernaryPatcher;
+import com.mebigfatguy.fbcontrib.utils.ToString;
 import com.mebigfatguy.fbcontrib.utils.Values;
 
 import edu.umd.cs.findbugs.BugInstance;
@@ -48,12 +49,17 @@ import edu.umd.cs.findbugs.ba.ClassContext;
 public class ArrayWrappedCallByReference extends BytecodeScanningDetector {
 	
 	static class WrapperInfo {
-		public int wrappedReg;
-		public boolean wasArg;
+		int wrappedReg;
+		boolean wasArg;
 		
-		public WrapperInfo(int reg) {
+		WrapperInfo(int reg) {
 			wrappedReg = reg;
 			wasArg = false;
+		}
+		
+		@Override
+		public String toString() {
+			return ToString.build(this);
 		}
 	}
 	

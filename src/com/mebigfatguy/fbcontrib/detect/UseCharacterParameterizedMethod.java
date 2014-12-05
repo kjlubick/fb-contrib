@@ -28,6 +28,7 @@ import org.apache.bcel.classfile.Code;
 import org.apache.bcel.classfile.Method;
 
 import com.mebigfatguy.fbcontrib.utils.BugType;
+import com.mebigfatguy.fbcontrib.utils.ToString;
 import com.mebigfatguy.fbcontrib.utils.Values;
 
 import edu.umd.cs.findbugs.BugInstance;
@@ -43,7 +44,7 @@ import edu.umd.cs.findbugs.ba.ClassContext;
  */
 public class UseCharacterParameterizedMethod extends BytecodeScanningDetector 
 {
-	public final static Map<String, Object> characterMethods;
+	private final static Map<String, Object> characterMethods;
 	static {
 	    Map<String, Object> methodsMap = new HashMap<String, Object>();
 	    //The values are where the parameter will be on the stack - For example, a value of 0 means the String literal to check
@@ -65,11 +66,16 @@ public class UseCharacterParameterizedMethod extends BytecodeScanningDetector
 	}
 	
 	private static class IntPair {
-	    public final int firstStringParam, secondStringParam;
+	    final int firstStringParam, secondStringParam;
 
-        public IntPair(int firstStringParam, int secondStringParam) {
+        IntPair(int firstStringParam, int secondStringParam) {
             this.firstStringParam = firstStringParam;
             this.secondStringParam = secondStringParam;
+        }
+        
+        @Override
+        public String toString() {
+        	return ToString.build(this);
         }
 	}
 	

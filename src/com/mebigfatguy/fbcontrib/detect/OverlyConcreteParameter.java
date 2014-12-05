@@ -38,6 +38,8 @@ import org.apache.bcel.generic.Type;
 
 import com.mebigfatguy.fbcontrib.utils.BugType;
 import com.mebigfatguy.fbcontrib.utils.RegisterUtils;
+import com.mebigfatguy.fbcontrib.utils.ToString;
+import com.mebigfatguy.fbcontrib.utils.Values;
 
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
@@ -103,8 +105,8 @@ public class OverlyConcreteParameter extends BytecodeScanningDetector
 		methodSignatureIsConstrained = false;
 		String methodName = obj.getName();
 
-		if (!"<init>".equals(methodName)
-		&&  !"<clinit>".equals(methodName)) {
+		if (!Values.CONSTRUCTOR.equals(methodName)
+		&&  !Values.STATIC_INITIALIZER.equals(methodName)) {
 			String methodSig = obj.getSignature();
 
 			methodSignatureIsConstrained = methodIsSpecial(methodName, methodSig);
@@ -518,27 +520,30 @@ public class OverlyConcreteParameter extends BytecodeScanningDetector
 		}
 	}
 
-	public static class MethodInfo
+	/**
+	 * an inner helper class that holds basic information about a method
+	 */
+	static class MethodInfo
 	{
 		private final String methodName;
 		private final String methodSig;
 		private final String[] methodExceptions;
 
-		public MethodInfo(String name, String sig, String[] excs) {
+		MethodInfo(String name, String sig, String[] excs) {
 			methodName = name;
 			methodSig = sig;
 			methodExceptions = excs;
 		}
 
-		public String getMethodName() {
+		String getMethodName() {
 			return methodName;
 		}
 
-		public String getMethodSignature() {
+		String getMethodSignature() {
 			return methodSig;
 		}
 
-		public String[] getMethodExceptions() {
+		String[] getMethodExceptions() {
 			return methodExceptions;
 		}
 
@@ -567,7 +572,7 @@ public class OverlyConcreteParameter extends BytecodeScanningDetector
 
 		@Override
 		public String toString() {
-			return methodName + methodSig;
+			return ToString.build(this);
 		}
 	}
 }

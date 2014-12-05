@@ -33,6 +33,8 @@ import org.apache.bcel.generic.Type;
 import com.mebigfatguy.fbcontrib.utils.BugType;
 import com.mebigfatguy.fbcontrib.utils.RegisterUtils;
 import com.mebigfatguy.fbcontrib.utils.TernaryPatcher;
+import com.mebigfatguy.fbcontrib.utils.ToString;
+import com.mebigfatguy.fbcontrib.utils.Values;
 
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
@@ -41,6 +43,11 @@ import edu.umd.cs.findbugs.OpcodeStack;
 import edu.umd.cs.findbugs.OpcodeStack.CustomUserValue;
 import edu.umd.cs.findbugs.ba.ClassContext;
 
+/**
+ * looks for allocations of objects using the default constructor in a loop, where
+ * the object allocated is never assigned to any object that is used outside the loop.
+ * It is possible that this allocation can be done outside the loop to avoid excessive garbage.
+ */
 @CustomUserValue
 public class PossibleConstantAllocationInLoop extends BytecodeScanningDetector {
 
@@ -143,7 +150,7 @@ public class PossibleConstantAllocationInLoop extends BytecodeScanningDetector {
 				break;
 
 				case INVOKESPECIAL:
-					if ("<init>".equals(getNameConstantOperand()) && "()V".equals(getSigConstantOperand())) {
+					if (Values.CONSTRUCTOR.equals(getNameConstantOperand()) && "()V".equals(getSigConstantOperand())) {
 						String clsName = getClassConstantOperand();
 						if (!SYNTHETIC_ALLOCATION_CLASSES.contains(clsName)) {
 							if (switchInfos.isEmpty()) {
@@ -326,6 +333,11 @@ public class PossibleConstantAllocationInLoop extends BytecodeScanningDetector {
 			allocationPC = pc;
 			loopTop = -1;
 			loopBottom = -1;
+		}
+		
+		@Override
+		public String toString() {
+			return ToString.build(this);
 		}
 	}
 	

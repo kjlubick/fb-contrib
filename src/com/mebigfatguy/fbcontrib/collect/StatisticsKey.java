@@ -18,6 +18,12 @@
  */
 package com.mebigfatguy.fbcontrib.collect;
 
+import com.mebigfatguy.fbcontrib.utils.ToString;
+
+/**
+ * information about a method call for use in the Collect phase of statistics building,
+ * used in the key of the statistics map.
+ */
 public class StatisticsKey {
 	
 	private String className;
@@ -60,6 +66,6 @@ public class StatisticsKey {
 	
 	@Override
 	public String toString() {
-		return "StatisticsKey[className=" + className + ", methodName=" + methodName + ", signature=" + signature + "]";
+		return ToString.build(this);
 	}
 }

@@ -18,25 +18,18 @@
  */
 package com.mebigfatguy.fbcontrib.utils;
 
-/**
- * a class holding common constants used throughout fb-contrib
- */
-public class Values {
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-	public static final Integer NEGATIVE_ONE = Integer.valueOf(-1);
-	public static final Integer ZERO = Integer.valueOf(0);
-	public static final Integer ONE = Integer.valueOf(1);
-	public static final Integer TWO = Integer.valueOf(2);
-	public static final Integer THREE = Integer.valueOf(3);
-	public static final Integer FOUR = Integer.valueOf(4);
-	public static final Integer FIVE = Integer.valueOf(5);
-	public static final Integer SIX = Integer.valueOf(6);
-	public static final Integer SEVEN = Integer.valueOf(7);
-	public static final Integer EIGHT = Integer.valueOf(8);
-	
-	public static final String CONSTRUCTOR = "<init>";
-	public static final String STATIC_INITIALIZER = "<clinit>";
-	
-	private Values() {
-	}
+/**
+ * used to denote a method is used by an external tool to access
+ * bug information. The value is any description about how it is used,
+ * but is not required.
+ */
+@Retention(RetentionPolicy.CLASS)
+@Target(ElementType.METHOD)
+public @interface PublicAPI {
+	String value();
 }

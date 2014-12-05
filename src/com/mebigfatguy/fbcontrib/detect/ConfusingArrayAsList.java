@@ -50,7 +50,6 @@ public class ConfusingArrayAsList extends BytecodeScanningDetector {
         PRIMITIVE_ARRAYS.add("[[F");
         PRIMITIVE_ARRAYS.add("[[D");
         PRIMITIVE_ARRAYS.add("[[Z");
-
     }
     private BugReporter bugReporter;
     private OpcodeStack stack;
@@ -104,7 +103,7 @@ public class ConfusingArrayAsList extends BytecodeScanningDetector {
                 if ("java/util/Arrays".equals(clsName)) {
                     String methodName = getNameConstantOperand();
                     if ("asList".equals(methodName)) {
-                        if (stack.getStackDepth() == 1) {
+                        if (stack.getStackDepth() >= 1) {
                             OpcodeStack.Item item = stack.getStackItem(0);
                             String sig = item.getSignature();
                             if (PRIMITIVE_ARRAYS.contains(sig)) {

@@ -28,6 +28,7 @@ import java.util.Set;
 import org.apache.bcel.classfile.JavaClass;
 
 import com.mebigfatguy.fbcontrib.utils.BugType;
+import com.mebigfatguy.fbcontrib.utils.ToString;
 
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
@@ -165,12 +166,10 @@ public class CircularDependencies extends BytecodeScanningDetector {
     }
 
     static class LoopFinder {
+    	
         private Map<String, Set<String>> dGraph = null;
-
         private String startClass = null;
-
         private Set<String> visited = null;
-
         private Set<String> loop = null;
 
         public Set<String> findLoop(Map<String, Set<String>> dependencyGraph, String startCls) {
@@ -205,6 +204,11 @@ public class CircularDependencies extends BytecodeScanningDetector {
             }
             loop.remove(curClass);
             return false;
+        }
+        
+        @Override
+        public String toString() {
+        	return ToString.build(this);
         }
     }
 }

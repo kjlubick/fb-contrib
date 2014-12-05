@@ -31,6 +31,7 @@ import org.apache.bcel.generic.Type;
 
 import com.mebigfatguy.fbcontrib.utils.BugType;
 import com.mebigfatguy.fbcontrib.utils.RegisterUtils;
+import com.mebigfatguy.fbcontrib.utils.ToString;
 
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
@@ -191,13 +192,18 @@ public class ConfusingFunctionSemantics extends BytecodeScanningDetector
 		int returnPC = -1;
 		int alteredPC = -1;
 		
-		public void setReturnPC(int pc) {
+		void setReturnPC(int pc) {
 			returnPC = pc;
 		}
 		
-		public void setAlteredPC(int pc) {
+		void setAlteredPC(int pc) {
 			if (alteredPC < 0)
 				alteredPC = pc;
+		}
+		
+		@Override
+		public String toString() {
+			return ToString.build(this);
 		}
 	}
 }

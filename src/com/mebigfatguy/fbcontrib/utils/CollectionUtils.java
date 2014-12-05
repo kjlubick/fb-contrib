@@ -21,6 +21,10 @@ package com.mebigfatguy.fbcontrib.utils;
 import org.apache.bcel.Repository;
 import org.apache.bcel.classfile.JavaClass;
 
+/**
+ * a collection of static methods for determining if a class belongs to one or more
+ * collection types.
+ */
 public class CollectionUtils {
 
     private static JavaClass LIST_CLASS = null;
@@ -47,6 +51,8 @@ public class CollectionUtils {
      * 
      * @param clsName the class to determine it's parentage
      * @return if the class is a List, Set or Map
+     * 
+     * @throws ClassNotFoundException if the cls parameter can't be found
      */
     public static boolean isListSetMap(String clsName) throws ClassNotFoundException {
         JavaClass cls = Repository.lookupClass(clsName);

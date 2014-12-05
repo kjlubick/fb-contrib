@@ -40,6 +40,8 @@ import org.apache.bcel.generic.Type;
 import com.mebigfatguy.fbcontrib.utils.BugType;
 import com.mebigfatguy.fbcontrib.utils.RegisterUtils;
 import com.mebigfatguy.fbcontrib.utils.TernaryPatcher;
+import com.mebigfatguy.fbcontrib.utils.ToString;
+import com.mebigfatguy.fbcontrib.utils.Values;
 
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
@@ -209,7 +211,7 @@ public class LostExceptionStackTrace extends BytecodeScanningDetector
 						break;
 					} else if (pc > catchInfo.getStart() && pc <= catchInfo.getFinish()) {
 						if (seen == INVOKESPECIAL) {
-							if ("<init>".equals(getNameConstantOperand())) {
+							if (Values.CONSTRUCTOR.equals(getNameConstantOperand())) {
 								String className = getClassConstantOperand();
 								JavaClass exClass = Repository.lookupClass(className);
 								if (exClass.instanceOf(throwableClass)) {
@@ -323,6 +325,8 @@ public class LostExceptionStackTrace extends BytecodeScanningDetector
 	 * and if one of the parameters is the original exception
 	 * @param excReg the register of the original exception caught
 	 * @return whether this method call could be an exception builder method
+	 * 
+	 * @throws ClassNotFoundException if the class of the return type can't be found
 	 */
 	public boolean isPossibleExBuilder(int excReg) throws ClassNotFoundException {
 		String sig = getSigConstantOperand();
@@ -462,7 +466,7 @@ public class LostExceptionStackTrace extends BytecodeScanningDetector
 		
 		@Override
 		public String toString() {
-		    return "Register: " + exReg + " Range: [" + catchStart + "->" + catchFinish + "]";
+			return ToString.build(this);
 		}
 	}
 }

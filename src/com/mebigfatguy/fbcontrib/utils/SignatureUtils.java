@@ -29,6 +29,9 @@ import org.apache.bcel.generic.Type;
 
 import edu.umd.cs.findbugs.ba.generic.GenericSignatureParser;
 
+/**
+ * a collection of static methods for parsing signatures to find information out about them
+ */
 public class SignatureUtils {
 
     /**
@@ -104,6 +107,9 @@ public class SignatureUtils {
 
 	/**
 	 * converts a primitive type code to a signature
+	 * 
+	 * @param typeCode the raw JVM type value
+	 * @return the signature of the type
      */
 	public static String getTypeCodeSignature(int typeCode) {
 		switch (typeCode) {

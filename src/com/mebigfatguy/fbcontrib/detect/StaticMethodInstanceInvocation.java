@@ -31,6 +31,7 @@ import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.Type;
 
 import com.mebigfatguy.fbcontrib.utils.BugType;
+import com.mebigfatguy.fbcontrib.utils.ToString;
 
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
@@ -208,11 +209,16 @@ public class StaticMethodInstanceInvocation extends BytecodeScanningDetector {
 		String popSignature;
 		int popDepth;
 
-		public PopInfo(int pc, int lineNum, String signature, int depth) {
+		PopInfo(int pc, int lineNum, String signature, int depth) {
 			popPC = pc;
 			popLineNum = lineNum;
 			popSignature = signature;
 			popDepth = depth;
+		}
+		
+		@Override
+		public String toString() {
+			return ToString.build(this);
 		}
 	}
 }

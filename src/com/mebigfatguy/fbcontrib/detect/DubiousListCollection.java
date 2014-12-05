@@ -30,6 +30,7 @@ import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.generic.Type;
 
 import com.mebigfatguy.fbcontrib.utils.BugType;
+import com.mebigfatguy.fbcontrib.utils.ToString;
 
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
@@ -251,6 +252,11 @@ public class DubiousListCollection extends BytecodeScanningDetector
 		public int getSetCount()
 		{
 			return setCnt;
+		}
+		
+		@Override
+		public String toString() {
+			return ToString.build(this);
 		}
 	}
 }
